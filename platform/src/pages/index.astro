@@ -1,0 +1,214 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Ana Sayfa">
+	<!-- Hero Section: Full bleed pitch black, focused -->
+	<section class="hero">
+		<div class="hero-content">
+			<div class="badge-wrapper">
+				<span class="badge">Sürüm 2.0</span>
+			</div>
+			<h1>Görsel İletişim,<br/>Kodla Şekilleniyor.</h1>
+			<p class="hero-desc">
+				HTML, CSS ve modern web teknolojileriyle tasarımın sınırlarını aşın. GİT 423 ders platformuna hoş geldiniz.
+			</p>
+			<div class="hero-actions">
+				<a href="#haftalar" class="btn btn-primary">Ders Programını İncele</a>
+				<a href="/announcements" class="btn btn-subtle">Duyurular &rarr;</a>
+			</div>
+		</div>
+	</section>
+
+	<section id="haftalar" class="weeks-section">
+		<div class="section-header">
+			<h2>Ders Programı</h2>
+			<p>Haftalık müfredat ve materyaller</p>
+		</div>
+		
+		<div class="weeks-grid">
+			<a href="/weeks/hafta-1" class="card week-card">
+				<div class="week-header">
+					<span class="week-num font-mono">Hafta 01</span>
+					<span class="status-indicator live">Yayında</span>
+				</div>
+				<h3>Oryantasyon ve Vizyon</h3>
+				<p>Dersin işleyişi, çalışma ekosistemi ve web dünyasına genel bir bakış.</p>
+			</a>
+
+			<div class="card week-card locked">
+				<div class="week-header">
+					<span class="week-num font-mono">Hafta 02</span>
+					<span class="status-indicator">Yakında</span>
+				</div>
+				<h3>Semantic HTML</h3>
+				<p>İnternetin çalışma mantığı ve anlamsal iskelet inşası.</p>
+			</div>
+			
+			<div class="card week-card locked">
+				<div class="week-header">
+					<span class="week-num font-mono">Hafta 03</span>
+					<span class="status-indicator">Yakında</span>
+				</div>
+				<h3>CSS Temelleri</h3>
+				<p>Görsel öğelerin kullanımı, sayfa içi/dışı bağlantılar ve stil.</p>
+			</div>
+		</div>
+	</section>
+</Layout>
+
+<style>
+	/* Hero Section */
+	.hero {
+		padding: var(--spacing-96) 0 var(--spacing-64);
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+	}
+
+	.hero-content {
+		max-width: 680px;
+	}
+
+	.badge-wrapper {
+		margin-bottom: var(--spacing-24);
+	}
+
+	.badge {
+		background: var(--color-charcoal-grey);
+		color: var(--color-porcelain);
+		padding: var(--spacing-4) var(--spacing-8);
+		border-radius: var(--radius-tags);
+		font-size: var(--text-caption);
+		font-weight: var(--font-weight-w510);
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
+		border: 1px solid var(--color-muted-ash);
+	}
+
+	.hero h1 {
+		color: var(--color-porcelain);
+	}
+
+	.hero-desc {
+		color: var(--color-storm-cloud);
+		font-size: var(--text-heading);
+		line-height: var(--leading-heading);
+		margin-bottom: var(--spacing-32);
+		font-weight: var(--font-weight-regular);
+		letter-spacing: var(--tracking-heading);
+	}
+
+	.hero-actions {
+		display: flex;
+		gap: var(--spacing-16);
+		align-items: center;
+	}
+
+	/* Weeks Section */
+	.weeks-section {
+		margin-top: var(--spacing-48);
+		padding-top: var(--spacing-48);
+		border-top: 1px solid var(--color-charcoal-grey);
+	}
+
+	.section-header {
+		margin-bottom: var(--spacing-32);
+	}
+
+	.section-header p {
+		margin-bottom: 0;
+	}
+
+	.weeks-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+		gap: var(--spacing-16);
+	}
+
+	.week-card {
+		display: flex;
+		flex-direction: column;
+		text-decoration: none;
+		color: inherit;
+		height: 100%;
+		transition: border-color var(--transition-fast), transform var(--transition-fast);
+	}
+
+	.week-card:hover {
+		border-color: var(--color-light-steel);
+		transform: translateY(-2px);
+		box-shadow: var(--shadow-subtle-2);
+	}
+
+	.week-card h3 {
+		margin-bottom: var(--spacing-8);
+		font-size: 16px;
+	}
+
+	.week-card p {
+		margin-bottom: 0;
+		flex: 1;
+		font-size: 13px;
+	}
+
+	.week-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: var(--spacing-16);
+	}
+
+	.week-num {
+		color: var(--color-light-steel);
+		font-size: var(--text-caption);
+		letter-spacing: 0.05em;
+	}
+
+	.status-indicator {
+		font-size: 11px;
+		color: var(--color-fog-grey);
+		display: flex;
+		align-items: center;
+		gap: 6px;
+	}
+
+	.status-indicator::before {
+		content: '';
+		display: block;
+		width: 6px;
+		height: 6px;
+		border-radius: 50%;
+		background: var(--color-fog-grey);
+	}
+
+	.status-indicator.live {
+		color: var(--color-neon-lime);
+	}
+
+	.status-indicator.live::before {
+		background: var(--color-neon-lime);
+		box-shadow: 0 0 8px rgba(228, 242, 34, 0.4);
+	}
+
+	.week-card.locked {
+		opacity: 0.5;
+		pointer-events: none;
+		background: var(--color-pitch-black); /* Less prominent than graphite */
+	}
+
+	@media (max-width: 768px) {
+		.hero {
+			padding: var(--spacing-48) 0;
+		}
+		
+		.hero-desc {
+			font-size: 18px;
+		}
+
+		.hero-actions {
+			flex-direction: column;
+			align-items: stretch;
+		}
+	}
+</style>

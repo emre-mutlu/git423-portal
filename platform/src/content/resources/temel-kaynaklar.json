@@ -1,0 +1,16 @@
+{
+  "baslik": "Temel Kaynaklar",
+  "kategori": "HTML & CSS",
+  "linkler": [
+    {
+      "ad": "MDN Web Docs",
+      "url": "https://developer.mozilla.org/en-US/",
+      "aciklama": "Web standartları için en güvenilir ve detaylı başvuru kaynağı."
+    },
+    {
+      "ad": "CSS-Tricks Flexbox Rehberi",
+      "url": "https://css-tricks.com/snippets/css/a-guide-to-flexbox/",
+      "aciklama": "Flexbox yerleşimleri için görsel ve pratik rehber."
+    }
+  ]
+}

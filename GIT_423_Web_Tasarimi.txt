@@ -1,0 +1,221 @@
+
+DERS İZLENCESİ (SYLLABUS)
+Ders Yürütücüleri
+........................................
+Dönem
+........................................
+Yıl
+........................................
+Gün / Saat
+........................................
+
+Dersi Açan Fakülte/ Enstitü
+Mimarlık ve Tasarım Fakültesi
+Dersi Açan Bölüm/ Ana Bilim Dalı
+Görsel İletişim Tasarımı Bölümü
+Ders Kodu
+GİT 423
+Ders Adı
+Web Tasarımı
+Ders Kredisi
+3
+AKTS
+6
+Ön Koşullar
+yok
+Ders Türü (Zorunlu/Seçmeli)
+Zorunlu
+Öğretim Dili
+Türkçe
+Dersi Alan Programlar
+Görsel İletişim Tasarımı Lisans Programı
+Ders Tanımı
+Her öğrencinin bireysel olarak yürüteceği HTML ve CSS tabanlı görsel iletişim web tasarımı projesini geliştirmesi beklenir. Öğrencilerin kendi belirleyeceği konu bağlamında tasarladıkları web sitesin arayüz görsellerinin hazırlanması ve kodlarının yazılması beklenmektedir. Belirlenen süre içerisinde projeyi başarılı olarak tamamlayabilmek bu dersin gereksinimlerindendir.
+Ders Kitapları ve/veya Kaynaklar
+1. Jennifer Niederst Robbins – Learning Web Design: A Beginner's Guide to HTML, CSS, JavaScript, and Web Graphics
+2. Jon Duckett – HTML and CSS: Design and Build Websites
+3. Jeffrey Zeldman – Designing with Web Standards
+4. Ethan Marcotte – Responsive Web Design
+5. Steve Krug – Don't Make Me Think: A Common Sense Approach to Web Usability
+6. Dan Cederholm – CSS3 for Web Designers
+7. Jeremy Keith – HTML5 for Web Designers
+8. Rachel Andrew – The New CSS Layout
+9. Vitaly Friedman – Smashing Book: Modern Web Design and Development
+10. Luke Wroblewski – Mobile First
+Ders Amaçları
+Web Tasarımı dersi, kullanıcı deneyimi (UX) ve arayüz tasarımı (UI) prensipleri doğrultusunda estetik ve işlevsel web siteleri oluşturmayı amaçlar. Öğrencilerin, görsel hiyerarşi, tipografi, renk kullanımı ve erişilebilirlik gibi temel tasarım unsurlarını öğrenerek, modern ve kullanıcı dostu web arayüzleri tasarlamaları hedeflenmektedir.
+Ders Çıktıları
+1. Web ortamının teknik altyapısını, tarayıcı dinamiklerini ve dijital medya formatlarının web üzerindeki çalışma prensiplerini kavrar.
+2. Arayüz tasarımı (UI) ve web geliştirme süreçleri için gerekli endüstri standardı yazılımları ve araçları etkin kullanır.
+3. Kullanıcı deneyimini (UX) merkeze alarak, estetik ve işlevsel web arayüzleri tasarlar.
+4. Bir web sitesi projesini tel kafes (wireframe), bilgi mimarisi ve prototipleme aşamalarıyla planlayarak baştan sona yönetir.
+Konular
+1. HAFTA: ORYANTASYON, VİZYON VE HEDEF BELİRLEME 
+	•	Dersin genel işleyişi ve çalışma disiplini.
+	•	Tasarımcı neden kod bilmeli? 
+	•	Çalışma ekosisteminin tanıtımı: VS Code, Tarayıcı Geliştirici Araçları ve AI asistanları.
+
+2. HAFTA WEB DÜNYASINA GİRİŞ VE SEMANTIC HTML 
+	•	İnternetin çalışma mantığı: Server/Client, Domain ve Hosting kavramları.
+	•	VS Code kurulumu ve temel HTML iskeleti.
+	•	İçerik hiyerarşisi: Başlık (h1-h6), paragraf (p) ve liste yapıları.
+	•	Semantic HTML: Web sayfasının anlamlı bir iskelete kavuşturulması.
+
+3. HAFTA VISUAL ELEMENTS, LINK YAPILARI VE DOSYA HİYERARŞİSİ 
+	•	Görsel öğelerin (img) sayfaya dahil edilmesi ve format seçimleri.
+	•	Sayfalar arası ve dış kaynaklı bağlantıların (a) oluşturulması.
+	•	Proje klasörü yönetimi (index.html, /css ve /img klasör düzeni).
+	•	Tıklanabilir alanları (buton, metin, görsel) kullanıcıya görsel olarak hissettirme prensipleri.
+
+Ödev 1: Kişisel fotoğraf, kısa özgeçmiş ve sosyal bağlantılardan oluşan doğru klasör yapısına sahip HTML sayfası.
+
+4. HAFTA CSS TEMELLERİ VE TİPOGRAFİ 
+	•	Harici CSS dosyası oluşturma ve HTML ile bağlama.
+	•	Renk teorisinin koda aktarımı: HEX ve RGB kullanımı.
+	•	Google Fonts entegrasyonu ve dijital tipografi kuralları.
+	•	Arayüz tasarımında dengeli renk hiyerarşisi kurma ve yönlendirici renklerin kullanımı.
+
+Ödev 2: İlk ödevde hazırlanan sayfanın görsel kimliğe uygun renk ve fontlarla biçimlendirilmesi.
+
+5. HAFTA BOX MODEL VE AI İLE DEBUGGING (HATA AYIKLAMA) 
+	•	Box Model prensipleri: Elemanların dış boşluk (Margin), iç boşluk (Padding) ve kenarlık (Border) yönetimi.
+	•	Kod hatalarını çözmek ve teknik sorular sormak için AI araçlarını kullanma teknikleri.
+	•	Tasarımda boşlukları aktif bir eleman olarak kullanarak okunabilirliği ve görsel gruplamayı sağlama.
+
+Ödev 3: Sayfa elemanlarının boşluk ve hizalama ayarlarının Box Model kurallarına göre yapılandırılması.
+
+6. HAFTA FLEXBOX İLE MODERN YERLEŞİM 
+	•	Flexbox modülü: Elemanları yatay ve dikey eksende hizalama teknikleri.
+	•	Sayfa içi içeriklerin yan yana ve esnek bir şekilde dizilmesi.
+	•	Kullanıcıların ekranı okuma ve tarama alışkanlıklarına uygun stratejik yerleşim planlaması yapma.
+
+Ödev 4: Flexbox kullanılarak profil görseli ve metin alanlarının profesyonel standartlarda hizalanması.
+
+7. HAFTA WIREFRAME, NAVIGATION VE İLETİŞİM ÇÖZÜMLERİ 
+	•	Kodlamaya başlamadan önce Wireframe (taslak çizim) oluşturma pratiği.
+	•	Çok sayfalı site mimarisi ve Navigation (menü) sisteminin kurulması.
+	•	Formspree veya mailto linki ile basit iletişim yönlendirmeleri.
+	•	Ziyaretçi alışkanlıklarına uygun, anlaşılır ve kafa karıştırmayan menü yapıları kurgulama.
+
+Ödev 5: 3 ayrı HTML sayfasının oluşturulması ve menü aracılığıyla birbirine bağlanması.
+
+8. HAFTA CSS GRID SİSTEMİ VE GALERİ YAPISI 
+	•	CSS Grid sistemi: Portfolyo işlerini düzenli sütunlar (Columns) halinde sergileme.
+	•	Grid template yapıları ile ızgara yerleşimleri oluşturma.
+
+Ödev 6: Portfolyo sayfası için projelerin sergileneceği 3 veya 4 sütunlu bir Grid galerisinin kodlanması.
+
+9. HAFTA RESPONSIVE DESIGN (MOBİL UYUMLULUK) 
+	•	Media Queries kullanımı ve Responsive Design (duyarlı tasarım) yaklaşımı.
+	•	Breakpoint mantığı: Ekran boyutuna göre layout (yerleşim) değişimi.
+
+Ödev 7: Tasarlanan galeri yapısının ve genel sayfa düzeninin mobil cihazlara uyumlu hale getirilmesi.
+
+10. HAFTA UI INTERACTIONS VE ZENGİN MEDYA 
+	•	UI Interactions: CSS ile Hover durumları ve Transition (yumuşak geçiş) efektleri.
+	•	Zengin Medya: Video projelerini gömme veya isteğe bağlı iframe kullanımı.
+	•	Tasarım öğelerine görsel geri bildirimler (anlık tepkiler) ekleyerek kullanıcı deneyimini iyileştirme.
+
+Ödev 8: Menü, buton ve galeri öğelerine CSS Transition efektleri eklenerek arayüzün dinamikleştirilmesi.
+
+11. HAFTA OPTİMİZASYON, AI VE STÜDYO KRİTİĞİ 
+	•	Görsel optimizasyonu (WebP formatı) ve site hızı kontrolleri.
+	•	Proje açıklamaları yazma veya görsel varlıkları optimize etmede AI kullanımı.
+	•	Projelerinin koda aktarım süreci ve teknik kritik.
+
+12. HAFTA DEPLOYMENT VE SOSYAL GÖRÜNÜRLÜK 
+	•	Web sitelerinin ücretsiz sunucular üzerinden (GitHub Pages veya Netlify) Deployment (yayına alma) süreçleri.
+	•	Sosyal medyada (bağlantı paylaşıldığında) profesyonel link önizlemeleri oluşturma.
+
+FİNAL PROJESİ
+
+Değerlendirme Ölçütleri ve Ağırlıkları
+%50 Ödevler
+%50 Final Proje Notu
+
+Değerlendirme Kriterleri: 
+Teknik Uyum (DÇ 1, PÇ 2) (Responsive davranış, doğru çözünürlük ve web standartlarına uygunluk)
+
+Araç Hakimiyeti (DÇ 2, PÇ 4) (Yazılımın veya kodun ne kadar temiz ve profesyonel kullanıldığı)
+
+Arayüz Estetiği (DÇ 3, PÇ 7) (Görsel estetik, buton yerleşimleri, okunabilirlik ve işlevsellik)
+
+Planlama (DÇ 4, PÇ 8) (Site haritasının mantığı, sayfa akışları ve zaman yönetimi)
+
+Ders Çıktısı – Program Çıktısı Matrisi
+DÇ \ PÇ
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+1
+
+X
+
+
+
+
+
+
+
+
+
+
+
+
+2
+
+
+
+X
+
+
+
+
+
+
+
+
+
+
+3
+
+
+
+
+
+
+X
+
+
+
+
+
+
+
+4
+
+
+
+
+
+
+
+X
+
+
+
+
+
+
+
