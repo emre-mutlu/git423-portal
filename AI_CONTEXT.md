@@ -5,45 +5,76 @@ Bu belge, bu projeye sonradan dahil olan veya kodu analiz eden herhangi bir Yapa
 LÜTFEN BU PROJEDE KOD YAZMADAN VEYA YENİ ÖZELLİK EKLENMEDEN ÖNCE BU KURALLARI DİKKATLE OKUYUNUZ.
 
 ## 1. Proje Özeti
-Bu proje, Emre Mutlu tarafından yürütülen **GİT 423 Web Tasarımı** dersi (Görsel İletişim Tasarımı Bölümü) için hazırlanan; ders notlarının (haftalar), duyuruların ve kaynakların yönetildiği bir Headless Eğitim Platformudur. Aynı zamanda, öğrencilerin arayüzden doğrudan dosya yüklediği ve arka planda GitHub Pull Request (PR) modelinin otomatik işletildiği gelişmiş bir notlandırma ve ödev teslim sistemine sahiptir. İki farklı şubeye hizmet vermektedir.
+
+**GİT 423 Web Tasarımı** dersi (Görsel İletişim Tasarımı Bölümü) için hazırlanan eğitim platformudur. Ders notları, duyurular, kaynaklar; öğrenci ödev teslimi ve not görüntüleme; eğitmen için tam yönetim paneli (admin) barındırır. İki farklı şubeye hizmet vermektedir.
 
 ## 2. Teknoloji Yığını (Tech Stack)
-- **Framework:** Astro (Statik Site Oluşturucu - SSG)
-- **İçerik Yönetimi:** Markdown (MD) ve Astro Content Collections v5+ (Zod Schemas + Glob Loader)
-- **Stil Dili:** Vanilla CSS (Global CSS mantığıyla inşa edilmiştir, TailwindCSS KULLANILMAMAKTADIR).
-- **Veritabanı:** Güvenlik ve basitlik açısından statik JavaScript modülü (`src/data/students.js`).
 
-## 3. Tasarım Dili (Design System: Linear "Command Center")
-Proje baştan aşağıya **Linear** uygulamasının "Command Center" tasarım estetiğine göre kurgulanmıştır.
-> **AI Asistanı için Tasarım Kuralı:** Yeni bir bileşen (component) oluştururken bu kuralların dışına çıkılması kesinlikle YASAKTIR.
+- **Framework:** Astro (SSR — `output: "server"`)
+- **Adapter:** `@astrojs/netlify` — Netlify Functions üzerinde çalışır
+- **İçerik Yönetimi:** Markdown + Astro Content Collections v5 (Zod schemas)
+- **Veritabanı:** Supabase PostgreSQL (`students`, `assignments`, `submissions` tabloları)
+- **Dosya Depolama:** Supabase Storage (`submissions` bucket — ZIP dosyaları)
+- **Auth:** HTTP-only cookie (`git423_session` öğrenci, `git423_admin` admin)
+- **Stil:** Vanilla CSS (TailwindCSS KULLANILMAMAKTADIR)
+- **Deploy:** Netlify (GitHub Actions → `netlify-cli deploy --prod`)
 
-- **Renk Paleti (Koyu Tema Zorunlu):**
-  - Arkaplan daima `Pitch Black` (`#08090a`).
-  - Kart yüzeyleri katmanına göre `Graphite` (`#0f1011`) veya `Deep Slate` (`#161718`).
-  - Birincil Aksiyon Butonları (Call to Action) SADECE `Neon Lime` (`#e4f222`). Başka hiçbir yerde canlı renk kullanılmamalıdır.
-  - Border'lar `Charcoal Grey` (`#23252a`) ve `1px` kalınlığında olmalıdır.
-  - Metinler `Porcelain` (`#f7f8f8`) veya ikincil/üçüncül ise `Storm Cloud` (`#8a8f98`).
-- **Tipografi:** 
-  - Arayüz metinlerinde `Inter` (Google Fonts).
-  - Sayısal veriler, tablolar, öğrenci notları ve kod bloklarında MUTLAKA `IBM Plex Mono` (monospace).
-- **Şekil ve Form:**
-  - Tüm genel kapsayıcılar ve butonlar KESİN `6px` radius olmalıdır. `border-radius: 6px` kuralı çiğnenmemeli. Hap formu kullanılmaz (Pill-shaped sadece ufak tag/etiket bileşenlerinde geçerlidir).
-  - Kutularda sadece teknik derinlik hissi veren küçük gölgeler (`rgba(0, 0, 0, 0.4) 0px 2px 4px 0px`) olmalıdır, devasa blur gölgeler (glow efektleri) yasaktır.
+## 3. Dosya Yapısı (Kritik Yollar)
 
-## 4. Öğrenci Not Paneli ve İş Mantığı (Business Logic)
-Platform, öğrencilerin sadece ID (Öğrenci Numarası) girerek notlarını sorguladıkları bir sisteme sahiptir. 
-- **100/60 Puanlama Algoritması:** Öğrencinin GitHub üzerinden teslim ettiği ödevleri "on-time" (Zamanında - 100 tam puan), "late" (Geç Teslim - 60 tavan puan) veya "not-submitted" (Teslim Edilmedi - 0) olarak `students.js` dosyasına kaydedilir. JavaScript bu statüleri anlık olarak puana çevirir.
-- **Dinamik Vize Ortalaması:** Öğrencinin "şimdiyekadar değerlendirilmiş" ödevlerinin toplam puanı, değerlendirilen ödev sayısına bölünerek Vize projeksiyonu anlık olarak hesaplanır. Gelecekte eklenecek bir özellik bu matematiği bozmamalıdır.
+```
+platform/src/
+  lib/
+    supabase.ts       — supabase (anon) + supabaseAdmin (service role) client'ları
+    auth.ts           — PIN hashleme, session/admin cookie üretme & doğrulama
+  middleware.ts       — /grades, /submit → öğrenci cookie; /admin/* → admin cookie
+  layouts/
+    Layout.astro      — Öğrenci sayfaları (Header + Footer içerir)
+    AdminLayout.astro — Admin sayfaları (admin nav içerir)
+  pages/
+    login.astro           — Öğrenci girişi (no + PIN)
+    grades.astro          — Öğrenci not paneli (Supabase'den)
+    submit.astro          — Ödev teslim (ZIP → Supabase Storage)
+    admin/
+      login.astro         — Admin giriş (ADMIN_PASSWORD)
+      index.astro         — Dashboard
+      assignments.astro   — Ödev CRUD
+      submissions.astro   — Teslim listesi + filtre
+      submissions/[id].astro — Kod inceleyici + iframe önizleme + not girişi
+      students.astro      — Öğrenci listesi + PIN sıfırlama
+    api/
+      auth/             — check-number, login, set-pin, logout
+      submit-homework.ts
+      admin/
+        login.ts / logout.ts
+        assignments.ts          — POST/PATCH/DELETE
+        submissions/[id]/grade.ts — PATCH: status, score, graded_at
+        students/[id]/reset-pin.ts — POST: pin_hash = null
+```
 
-## 5. Ders Yürütücüsü Özel Kuralları (ÖNEMLİ)
-Aşağıdaki kurallar bizzat ders yürütücüsü Emre Mutlu'nun talepleridir:
-- Veri ihlallerini veya görüntüleme sorunlarını önlemek için, UI üzerinde hiçbir öğrencinin tam adı gösterilmemeli, listeler maskelenmiş olmalıdır (Örn: A*** Y***).
-- Ders materyalleri (weeks) şubelere göre ayrılmaz (Single Source of Truth). Ödev teslimleri için de "GitHub Classroom" KULLANILMAZ.
-- **Hibrit Ödev Teslim Mimarisi:** Öğrenciler, GitHub süreçleriyle uğraşmazlar. Platform üzerindeki `/submit` sayfasından dosyalarını yüklerler.
-- **Backend (API) & Registry:** Astro SSR API'si (`submit-homework.ts`), öğrenci numarasını alır ve `src/data/registry.json` (sunucu tarafı) dosyasından öğrencinin ismini ve şubesini bulur.
-- **GitHub Klasör Hiyerarşisi:** Dosyalar, GitHub deponuza şu standartta otomatik push edilir: `Sube-X/Hafta-X/Isim-Soyisim/`. İsimler "Sube-1/Hafta-1/Irem-Meryem-Toprak" gibi yazılımcı standartlarına uygun (tireli/İngilizce karakterli) klasörlenir.
-- **Otomasyon (GitHub Actions):** Sistem tarafından açılan bu PR'lar, GitHub Action robotu tarafından taranır. Robot, klasör yolundaki `Sube-X` ifadesine bakarak `Şube 1` veya `Şube 2` etiketini atar. Zaman kontrolü yapılarak `Zamanında (100)` veya `Geç Teslim (60)` etiketleri de eklenir. Notlar, eğitmen tarafından bu etiketlere bakılarak `students.js` dosyasına işlenir.
+## 4. Supabase Şeması
 
-## 6. Geliştirme ve Dağıtım Adımları
-- Sürüm ve test işlemleri yerel ortamda `npm run dev` ile `http://localhost:4321` adresinde test edilmelidir.
-- Tüm `git` logları ve majör özellikler `CHANGELOG.md` dosyasına kaydedilmelidir. Sistem güncellemelerinde geçmiş versiyonları silmeyiniz, daima ekleme (append) yapınız.
+**`students`:** `id`, `student_number`, `name_masked`, `branch`, `pin_hash`
+**`assignments`:** `id`, `week_number`, `title`, `deadline`, `is_active`
+**`submissions`:** `id`, `student_id`, `assignment_id`, `file_path`, `submitted_at`, `is_late`, `status` (`submitted`|`graded`), `score`, `graded_at`
+
+Storage bucket: `submissions/{student_id}/{assignment_id}.zip`
+
+## 5. Auth Akışı
+
+**Öğrenci:** `/login` → öğrenci no + PIN → `git423_session` cookie (base64 `studentId:token`, HttpOnly, 24 saat) → middleware `context.locals.student` set eder
+**Admin:** `/admin/login` → `ADMIN_PASSWORD` env → `git423_admin=authorized` cookie (HttpOnly, 8 saat)
+
+## 6. Tasarım Dili (Linear "Command Center")
+
+> **AI Asistanı için Tasarım Kuralı:** Yeni bir bileşen oluştururken bu kuralların dışına çıkılması kesinlikle YASAKTIR.
+
+- **Renk:** Arkaplan `Pitch Black` (`#08090a`). Kartlar `Graphite`/`Deep Slate`. CTA butonlar SADECE `Neon Lime` (`#e4f222`). Border `Charcoal Grey` `1px`.
+- **Tipografi:** Arayüz → `Inter`. Sayılar/tablolar/kod → `IBM Plex Mono`.
+- **Şekil:** `6px` radius zorunlu. Pill sadece küçük tag'lerde. Glow efekti yasak.
+- **Öğrenci gizliliği:** Tam isim hiçbir yerde gösterilmez — sadece `name_masked`.
+
+## 7. Geliştirme ve Dağıtım
+
+- Lokal: `npm run dev` → `http://localhost:4321`
+- Deploy: `master` branch'e push → GitHub Actions → Netlify otomatik deploy
+- Tüm önemli değişiklikler `CHANGELOG.md`'ye eklenir (append, silme yapılmaz)
