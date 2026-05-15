@@ -1,0 +1,123 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+const { pathname } = Astro.url;
+---
+
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title} | GİT 423 Admin</title>
+  </head>
+  <body>
+    <div class="admin-shell">
+      <nav class="admin-nav">
+        <a href="/admin" class="admin-logo">
+          GİT 423 <span class="admin-tag">Admin</span>
+        </a>
+        <div class="nav-links">
+          <a href="/admin" class:list={['nav-link', { active: pathname === '/admin' }]}>Dashboard</a>
+          <a href="/admin/assignments" class:list={['nav-link', { active: pathname.startsWith('/admin/assignments') }]}>Ödevler</a>
+          <a href="/admin/submissions" class:list={['nav-link', { active: pathname.startsWith('/admin/submissions') }]}>Teslimler</a>
+          <a href="/admin/students" class:list={['nav-link', { active: pathname.startsWith('/admin/students') }]}>Öğrenciler</a>
+        </div>
+        <form action="/api/admin/logout" method="POST">
+          <button type="submit" class="btn btn-subtle logout-btn">Çıkış</button>
+        </form>
+      </nav>
+      <main class="admin-main">
+        <slot />
+      </main>
+    </div>
+  </body>
+</html>
+
+<style>
+  .admin-shell {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .admin-nav {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-24);
+    padding: 0 var(--spacing-32);
+    height: 56px;
+    border-bottom: 1px solid var(--color-charcoal-grey);
+    background: var(--color-graphite);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .admin-logo {
+    font-family: var(--font-berkeley-mono);
+    font-size: 13px;
+    color: var(--color-porcelain);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    letter-spacing: 0.02em;
+  }
+
+  .admin-tag {
+    font-size: 10px;
+    background: var(--color-neon-lime);
+    color: var(--color-pitch-black);
+    padding: 2px 6px;
+    border-radius: 2px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: var(--spacing-4);
+    flex: 1;
+  }
+
+  .nav-link {
+    font-size: 13px;
+    color: var(--color-storm-cloud);
+    text-decoration: none;
+    padding: 6px 10px;
+    border-radius: var(--radius-inputs);
+    transition: color 0.12s, background 0.12s;
+  }
+
+  .nav-link:hover {
+    color: var(--color-porcelain);
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .nav-link.active {
+    color: var(--color-porcelain);
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .logout-btn {
+    font-size: 13px;
+    padding: 6px 12px;
+  }
+
+  .admin-main {
+    flex: 1;
+    padding: var(--spacing-32);
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto;
+    box-sizing: border-box;
+  }
+</style>

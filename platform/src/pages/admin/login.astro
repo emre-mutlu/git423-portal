@@ -1,0 +1,147 @@
+---
+import '../../styles/global.css';
+
+const cookies = Astro.request.headers.get('cookie') ?? '';
+if (cookies.includes('git423_admin=authorized')) {
+  return Astro.redirect('/admin');
+}
+---
+
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>Admin Giriş | GİT 423</title>
+  </head>
+  <body>
+    <div class="login-wrap">
+      <div class="login-card card card-elevated">
+        <div class="login-header">
+          <span class="logo-mono font-mono">GİT 423</span>
+          <span class="admin-badge">Admin</span>
+        </div>
+        <div class="input-group">
+          <label for="password">Şifre</label>
+          <input
+            type="password"
+            id="password"
+            class="input-linear"
+            placeholder="••••••••"
+            autocomplete="current-password"
+          />
+        </div>
+        <button id="loginBtn" class="btn btn-primary w-full">Giriş Yap</button>
+        <p id="errorMsg" class="error-msg hidden">Hatalı şifre.</p>
+      </div>
+    </div>
+  </body>
+</html>
+
+<script>
+  document.getElementById('loginBtn')!.addEventListener('click', async () => {
+    const password = (document.getElementById('password') as HTMLInputElement).value;
+    const errorMsg = document.getElementById('errorMsg')!;
+    errorMsg.classList.add('hidden');
+
+    const res = await fetch('/api/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password }),
+    });
+
+    if (res.ok) {
+      window.location.href = '/admin';
+    } else {
+      errorMsg.classList.remove('hidden');
+    }
+  });
+
+  document.getElementById('password')!.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') (document.getElementById('loginBtn') as HTMLButtonElement).click();
+  });
+</script>
+
+<style>
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+  }
+
+  .login-wrap {
+    width: 100%;
+    max-width: 360px;
+    padding: var(--spacing-16);
+  }
+
+  .login-card {
+    padding: var(--spacing-32);
+  }
+
+  .login-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-8);
+    margin-bottom: var(--spacing-32);
+  }
+
+  .logo-mono {
+    font-size: 16px;
+    color: var(--color-porcelain);
+    letter-spacing: 0.02em;
+  }
+
+  .admin-badge {
+    font-size: 10px;
+    background: var(--color-neon-lime);
+    color: var(--color-pitch-black);
+    padding: 2px 6px;
+    border-radius: 2px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    font-family: var(--font-berkeley-mono);
+  }
+
+  .input-group {
+    margin-bottom: var(--spacing-16);
+  }
+
+  .input-group label {
+    display: block;
+    font-size: var(--text-caption);
+    color: var(--color-storm-cloud);
+    margin-bottom: var(--spacing-8);
+  }
+
+  .input-linear {
+    width: 100%;
+    box-sizing: border-box;
+    background: transparent;
+    color: var(--color-porcelain);
+    border: 1px solid var(--color-charcoal-grey);
+    border-radius: var(--radius-inputs);
+    padding: 12px 14px;
+    font-family: var(--font-inter-variable);
+    font-size: var(--text-body);
+    outline: none;
+    transition: border-color 0.12s;
+  }
+
+  .input-linear:focus {
+    border-color: var(--color-light-steel);
+  }
+
+  .w-full { width: 100%; }
+
+  .error-msg {
+    color: var(--color-warning-red);
+    font-size: var(--text-caption);
+    margin-top: var(--spacing-8);
+    text-align: center;
+  }
+
+  .hidden { display: none !important; }
+</style>

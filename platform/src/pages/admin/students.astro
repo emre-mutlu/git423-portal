@@ -1,0 +1,248 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { supabaseAdmin } from '../../lib/supabase';
+
+const url = Astro.url;
+const filterBranch = url.searchParams.get('branch') ?? '';
+
+let query = supabaseAdmin
+  .from('students')
+  .select('id, student_number, name_masked, branch, pin_hash')
+  .order('student_number');
+
+if (filterBranch) query = query.eq('branch', filterBranch);
+
+const { data: students } = await query;
+
+// Distinct branches for filter
+const { data: allStudents } = await supabaseAdmin
+  .from('students')
+  .select('branch');
+
+const branches = [...new Set(allStudents?.map(s => s.branch).filter(Boolean))].sort();
+---
+
+<AdminLayout title="Öğrenciler">
+  <div class="page-header">
+    <h1>Öğrenciler</h1>
+    <span class="count font-mono">{students?.length ?? 0} kayıt</span>
+  </div>
+
+  <form class="filters card card-elevated" method="GET">
+    <div class="filter-row">
+      <div class="input-group">
+        <label for="branch">Şube</label>
+        <select name="branch" id="branch" class="input-linear">
+          <option value="">Tümü</option>
+          {branches.map(b => (
+            <option value={b} selected={filterBranch === b}>{b}</option>
+          ))}
+        </select>
+      </div>
+      <button type="submit" class="btn btn-subtle filter-btn">Filtrele</button>
+      {filterBranch && (
+        <a href="/admin/students" class="btn btn-subtle filter-btn">Temizle</a>
+      )}
+    </div>
+  </form>
+
+  <div class="card card-elevated table-card">
+    {!students?.length ? (
+      <p class="empty">Öğrenci bulunamadı.</p>
+    ) : (
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Öğrenci No</th>
+            <th>Ad (Maskeli)</th>
+            <th>Şube</th>
+            <th>PIN</th>
+            <th>İşlem</th>
+          </tr>
+        </thead>
+        <tbody>
+          {students.map(s => (
+            <tr>
+              <td class="font-mono">{s.student_number}</td>
+              <td>{s.name_masked}</td>
+              <td class="text-muted">{s.branch}</td>
+              <td>
+                <span class={`badge ${s.pin_hash ? 'badge-success' : 'badge-neutral'}`}>
+                  {s.pin_hash ? 'Belirlendi' : 'Belirlenmedi'}
+                </span>
+              </td>
+              <td>
+                {s.pin_hash && (
+                  <button
+                    class="action-btn reset-pin-btn"
+                    data-id={s.id}
+                    data-no={s.student_number}
+                  >
+                    PIN Sıfırla
+                  </button>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    )}
+  </div>
+</AdminLayout>
+
+<script>
+  document.querySelectorAll('.reset-pin-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const el = btn as HTMLButtonElement;
+      const id = el.dataset.id!;
+      const no = el.dataset.no!;
+
+      if (!confirm(`${no} numaralı öğrencinin PIN'ini sıfırlamak istediğinizden emin misiniz?`)) return;
+
+      const res = await fetch(`/api/admin/students/${id}/reset-pin`, {
+        method: 'POST',
+      });
+
+      if (res.ok) {
+        el.textContent = '✓ Sıfırlandı';
+        el.disabled = true;
+        el.style.opacity = '0.5';
+        // Update badge in same row
+        const row = el.closest('tr')!;
+        const badge = row.querySelector('.badge')!;
+        badge.className = 'badge badge-neutral';
+        badge.textContent = 'Belirlenmedi';
+      } else {
+        alert('Hata oluştu.');
+      }
+    });
+  });
+</script>
+
+<style>
+  .page-header {
+    display: flex;
+    align-items: baseline;
+    gap: var(--spacing-12);
+    margin-bottom: var(--spacing-24);
+  }
+
+  .page-header h1 {
+    font-size: 24px;
+  }
+
+  .count {
+    font-size: 13px;
+    color: var(--color-storm-cloud);
+  }
+
+  .filters {
+    padding: var(--spacing-16) var(--spacing-20);
+    margin-bottom: var(--spacing-16);
+  }
+
+  .filter-row {
+    display: flex;
+    gap: var(--spacing-12);
+    align-items: flex-end;
+  }
+
+  .input-group {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .input-group label {
+    font-size: 11px;
+    color: var(--color-storm-cloud);
+    margin-bottom: 6px;
+  }
+
+  .input-linear {
+    background: transparent;
+    color: var(--color-porcelain);
+    border: 1px solid var(--color-charcoal-grey);
+    border-radius: var(--radius-inputs);
+    padding: 8px 10px;
+    font-family: var(--font-inter-variable);
+    font-size: 13px;
+    outline: none;
+    appearance: none;
+    min-width: 160px;
+  }
+
+  .filter-btn {
+    font-size: 13px;
+    padding: 8px 14px;
+    align-self: flex-end;
+    flex-shrink: 0;
+  }
+
+  .table-card {
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: var(--spacing-12) var(--spacing-16);
+    text-align: left;
+    border-bottom: 1px solid var(--color-charcoal-grey);
+    white-space: nowrap;
+  }
+
+  .data-table tr:last-child td {
+    border-bottom: none;
+  }
+
+  .data-table th {
+    color: var(--color-fog-grey);
+    font-weight: 400;
+    font-size: 11px;
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 6px;
+    border-radius: 2px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  .badge-success { background: rgba(0, 141, 44, 0.15); color: #27a644; border: 1px solid rgba(0, 141, 44, 0.3); }
+  .badge-neutral { background: var(--color-charcoal-grey); color: var(--color-fog-grey); }
+
+  .text-muted { color: var(--color-storm-cloud); }
+
+  .action-btn {
+    background: none;
+    border: 1px solid var(--color-charcoal-grey);
+    color: var(--color-storm-cloud);
+    padding: 4px 10px;
+    border-radius: var(--radius-inputs);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+
+  .action-btn:hover {
+    border-color: var(--color-warning-red);
+    color: var(--color-warning-red);
+  }
+
+  .empty {
+    padding: var(--spacing-32);
+    text-align: center;
+    color: var(--color-storm-cloud);
+    font-size: 13px;
+    margin: 0;
+  }
+</style>

@@ -15,7 +15,9 @@
     "@astrojs/netlify": "^7.0.9",
     "@astrojs/node": "^10.1.1",
     "@supabase/supabase-js": "^2.105.4",
-    "astro": "^6.3.2"
+    "astro": "^6.3.2",
+    "highlight.js": "^11.11.1",
+    "jszip": "^3.10.1"
   },
   "devDependencies": {
     "netlify-cli": "^26.0.1"

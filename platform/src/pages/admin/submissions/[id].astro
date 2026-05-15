@@ -1,0 +1,458 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { supabaseAdmin } from '../../../lib/supabase';
+
+const { id } = Astro.params;
+
+if (!id) return Astro.redirect('/admin/submissions');
+
+const { data: submission } = await supabaseAdmin
+  .from('submissions')
+  .select(`
+    id,
+    submitted_at,
+    is_late,
+    status,
+    score,
+    graded_at,
+    file_path,
+    assignment_id,
+    student_id,
+    students (student_number, name_masked, branch),
+    assignments (id, week_number, title, deadline)
+  `)
+  .eq('id', id)
+  .single();
+
+if (!submission) return new Response('Not found', { status: 404 });
+
+const { data: signedData } = await supabaseAdmin.storage
+  .from('submissions')
+  .createSignedUrl(submission.file_path, 3600);
+
+const zipUrl = signedData?.signedUrl ?? null;
+
+const student = submission.students as any;
+const assignment = submission.assignments as any;
+const submittedAt = new Date(submission.submitted_at);
+---
+
+<AdminLayout title={`Teslim — ${student?.student_number}`}>
+  <!-- Top bar -->
+  <div class="top-bar">
+    <div class="top-info">
+      <a href="/admin/submissions" class="back-link">← Teslimler</a>
+      <div class="meta">
+        <span class="font-mono">{student?.student_number}</span>
+        <span class="sep">/</span>
+        <span>{student?.name_masked}</span>
+        <span class="sep">/</span>
+        <span class="text-muted">{assignment ? `H${assignment.week_number} — ${assignment.title}` : '—'}</span>
+        <span class="sep">/</span>
+        <span class="text-muted">{submittedAt.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}</span>
+        {submission.is_late && <span class="late-badge">GEÇ</span>}
+      </div>
+    </div>
+    <div class="grade-controls">
+      <select id="statusSelect" class="input-select">
+        <option value="submitted" selected={submission.status === 'submitted'}>İnceleniyor</option>
+        <option value="graded" selected={submission.status === 'graded'}>Notlandı</option>
+      </select>
+      <input
+        type="number"
+        id="scoreInput"
+        class="input-score"
+        min="0"
+        max="100"
+        placeholder="Puan"
+        value={submission.score ?? ''}
+      />
+      <button id="saveGradeBtn" class="btn btn-primary btn-sm">Kaydet</button>
+      <span id="gradeStatus" class="grade-status hidden"></span>
+    </div>
+  </div>
+
+  <!-- Main viewer -->
+  {!zipUrl ? (
+    <div class="no-file card card-elevated">
+      <p>Dosya bulunamadı veya imzalı URL oluşturulamadı.</p>
+    </div>
+  ) : (
+    <div class="viewer-shell">
+      <!-- File tree -->
+      <div class="panel panel-tree">
+        <div class="panel-header">Dosyalar</div>
+        <div id="fileTree" class="file-tree">
+          <p class="loading-msg">Yükleniyor...</p>
+        </div>
+      </div>
+
+      <!-- Code viewer -->
+      <div class="panel panel-code">
+        <div class="panel-header" id="codeFilename">Dosya seçin</div>
+        <pre id="codeBlock" class="code-block"><code id="codeContent" class="hljs">—</code></pre>
+      </div>
+
+      <!-- Live preview -->
+      <div class="panel panel-preview">
+        <div class="panel-header">
+          Önizleme
+          <button id="reloadPreview" class="preview-reload" title="Yenile">↺</button>
+        </div>
+        <iframe id="previewFrame" class="preview-frame" sandbox="allow-scripts allow-same-origin"></iframe>
+      </div>
+    </div>
+  )}
+</AdminLayout>
+
+<script define:vars={{ zipUrl, submissionId: id }}>
+  if (!zipUrl) {
+    // no-op if no file
+  } else {
+    (async () => {
+      // Dynamically import JSZip and highlight.js
+      const [{ default: JSZip }, hljs] = await Promise.all([
+        import('jszip'),
+        import('highlight.js/lib/core').then(async m => {
+          const core = m.default;
+          const [html, css, js, json, xml] = await Promise.all([
+            import('highlight.js/lib/languages/xml'),
+            import('highlight.js/lib/languages/css'),
+            import('highlight.js/lib/languages/javascript'),
+            import('highlight.js/lib/languages/json'),
+            import('highlight.js/lib/languages/xml'),
+          ]);
+          core.registerLanguage('html', html.default);
+          core.registerLanguage('xml', xml.default);
+          core.registerLanguage('css', css.default);
+          core.registerLanguage('javascript', js.default);
+          core.registerLanguage('json', json.default);
+          return core;
+        }),
+      ]);
+
+      // Load highlight.js theme
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css';
+      document.head.appendChild(link);
+
+      // Fetch and parse ZIP
+      const res = await fetch(zipUrl);
+      const blob = await res.blob();
+      const zip = await JSZip.loadAsync(blob);
+
+      // Build file map
+      const files = {};
+      for (const [path, file] of Object.entries(zip.files)) {
+        if (!file.dir) files[path] = file;
+      }
+
+      const sortedPaths = Object.keys(files).sort();
+
+      // Render file tree
+      const treeEl = document.getElementById('fileTree');
+      treeEl.innerHTML = '';
+
+      for (const path of sortedPaths) {
+        const btn = document.createElement('button');
+        btn.className = 'tree-item';
+        btn.dataset.path = path;
+        const depth = path.split('/').length - 1;
+        btn.style.paddingLeft = `${12 + depth * 14}px`;
+        const filename = path.split('/').pop();
+        btn.textContent = filename;
+        btn.addEventListener('click', () => loadFile(path));
+        treeEl.appendChild(btn);
+      }
+
+      // Load file into code panel
+      async function loadFile(path) {
+        document.querySelectorAll('.tree-item').forEach(b => b.classList.remove('active'));
+        document.querySelector(`.tree-item[data-path="${path}"]`)?.classList.add('active');
+
+        document.getElementById('codeFilename').textContent = path;
+        const content = await files[path].async('string');
+        const ext = path.split('.').pop()?.toLowerCase();
+
+        const langMap = { html: 'html', htm: 'html', css: 'css', js: 'javascript', json: 'json', xml: 'xml' };
+        const lang = langMap[ext] || null;
+
+        const codeEl = document.getElementById('codeContent');
+        if (lang) {
+          codeEl.innerHTML = hljs.highlight(content, { language: lang }).value;
+        } else {
+          codeEl.textContent = content;
+        }
+        codeEl.className = `hljs language-${lang || 'plaintext'}`;
+      }
+
+      // Preview: find index.html and render with blob URLs
+      async function buildPreview() {
+        const indexPath = sortedPaths.find(p => p.toLowerCase().endsWith('index.html') || p === 'index.html');
+        if (!indexPath) {
+          document.getElementById('previewFrame').srcdoc = '<p style="font-family:sans-serif;padding:20px;color:#666">index.html bulunamadı.</p>';
+          return;
+        }
+
+        // Create blob URLs for all files
+        const blobUrls = {};
+        for (const path of sortedPaths) {
+          const ab = await files[path].async('arraybuffer');
+          const ext = path.split('.').pop()?.toLowerCase();
+          const mimeMap = { html: 'text/html', htm: 'text/html', css: 'text/css', js: 'application/javascript', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', svg: 'image/svg+xml', woff: 'font/woff', woff2: 'font/woff2', ttf: 'font/ttf', ico: 'image/x-icon' };
+          const mime = mimeMap[ext] || 'application/octet-stream';
+          blobUrls[path] = URL.createObjectURL(new Blob([ab], { type: mime }));
+        }
+
+        // Rewrite relative URLs in HTML
+        let html = await files[indexPath].async('string');
+        const basePath = indexPath.includes('/') ? indexPath.substring(0, indexPath.lastIndexOf('/') + 1) : '';
+
+        function resolveUrl(relative) {
+          if (relative.startsWith('http') || relative.startsWith('//') || relative.startsWith('data:')) return relative;
+          const fullPath = basePath + relative;
+          return blobUrls[fullPath] || blobUrls[relative] || relative;
+        }
+
+        html = html
+          .replace(/href="([^"]+)"/g, (_, url) => `href="${resolveUrl(url)}"`)
+          .replace(/src="([^"]+)"/g, (_, url) => `src="${resolveUrl(url)}"`)
+          .replace(/url\(['"]?([^'")]+)['"]?\)/g, (_, url) => `url('${resolveUrl(url)}')`);
+
+        const htmlBlob = new Blob([html], { type: 'text/html' });
+        const htmlUrl = URL.createObjectURL(htmlBlob);
+        document.getElementById('previewFrame').src = htmlUrl;
+      }
+
+      await buildPreview();
+
+      document.getElementById('reloadPreview')?.addEventListener('click', buildPreview);
+
+      // Auto-load first file
+      if (sortedPaths.length > 0) {
+        const preferred = sortedPaths.find(p => p.toLowerCase().endsWith('index.html')) || sortedPaths[0];
+        loadFile(preferred);
+      }
+    })();
+  }
+
+  // Grade saving
+  document.getElementById('saveGradeBtn')?.addEventListener('click', async () => {
+    const status = (document.getElementById('statusSelect')).value;
+    const scoreVal = (document.getElementById('scoreInput')).value;
+    const score = scoreVal ? parseInt(scoreVal) : null;
+    const statusEl = document.getElementById('gradeStatus');
+
+    const res = await fetch(`/api/admin/submissions/${submissionId}/grade`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status, score }),
+    });
+
+    if (res.ok) {
+      statusEl.textContent = '✓ Kaydedildi';
+      statusEl.className = 'grade-status success';
+    } else {
+      statusEl.textContent = '✗ Hata';
+      statusEl.className = 'grade-status error';
+    }
+    setTimeout(() => { statusEl.className = 'grade-status hidden'; }, 2000);
+  });
+</script>
+
+<style>
+  .top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-16);
+    margin-bottom: var(--spacing-20);
+    flex-wrap: wrap;
+  }
+
+  .back-link {
+    font-size: 12px;
+    color: var(--color-storm-cloud);
+    text-decoration: none;
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  .back-link:hover { color: var(--color-porcelain); }
+
+  .meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--color-porcelain);
+    flex-wrap: wrap;
+  }
+
+  .sep { color: var(--color-charcoal-grey); }
+  .text-muted { color: var(--color-storm-cloud); }
+
+  .late-badge {
+    font-size: 10px;
+    color: var(--color-warning-red);
+    border: 1px solid rgba(235, 87, 87, 0.4);
+    padding: 1px 5px;
+    border-radius: 2px;
+    font-family: var(--font-berkeley-mono);
+  }
+
+  .grade-controls {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-8);
+    flex-shrink: 0;
+  }
+
+  .input-select {
+    background: var(--color-deep-slate);
+    color: var(--color-porcelain);
+    border: 1px solid var(--color-charcoal-grey);
+    border-radius: var(--radius-inputs);
+    padding: 7px 10px;
+    font-size: 13px;
+    outline: none;
+    appearance: none;
+  }
+
+  .input-score {
+    width: 80px;
+    background: var(--color-deep-slate);
+    color: var(--color-porcelain);
+    border: 1px solid var(--color-charcoal-grey);
+    border-radius: var(--radius-inputs);
+    padding: 7px 10px;
+    font-family: var(--font-berkeley-mono);
+    font-size: 13px;
+    outline: none;
+    text-align: center;
+  }
+
+  .btn-sm {
+    padding: 7px 14px;
+    font-size: 13px;
+  }
+
+  .grade-status {
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 4px;
+  }
+
+  .grade-status.success { color: #27a644; background: rgba(0, 141, 44, 0.12); }
+  .grade-status.error { color: #ff8c8c; background: rgba(235, 87, 87, 0.12); }
+  .hidden { display: none !important; }
+
+  .no-file {
+    padding: var(--spacing-32);
+    text-align: center;
+    color: var(--color-storm-cloud);
+    font-size: 13px;
+  }
+
+  .viewer-shell {
+    display: grid;
+    grid-template-columns: 220px 1fr 1fr;
+    gap: var(--spacing-8);
+    height: calc(100vh - 160px);
+    min-height: 500px;
+  }
+
+  .panel {
+    background: var(--color-deep-slate);
+    border: 1px solid var(--color-charcoal-grey);
+    border-radius: var(--radius-cards);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .panel-header {
+    font-size: 11px;
+    color: var(--color-storm-cloud);
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--color-charcoal-grey);
+    background: rgba(255, 255, 255, 0.02);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    font-family: var(--font-berkeley-mono);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .file-tree {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 0;
+  }
+
+  .loading-msg {
+    font-size: 12px;
+    color: var(--color-storm-cloud);
+    padding: 12px;
+    margin: 0;
+  }
+
+  .tree-item {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    color: var(--color-light-steel);
+    font-size: 12px;
+    font-family: var(--font-berkeley-mono);
+    padding: 5px 12px;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: background 0.1s, color 0.1s;
+  }
+
+  .tree-item:hover {
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--color-porcelain);
+  }
+
+  .tree-item.active {
+    background: rgba(94, 106, 210, 0.15);
+    color: var(--color-aether-blue);
+  }
+
+  .code-block {
+    flex: 1;
+    overflow: auto;
+    margin: 0;
+    padding: var(--spacing-16);
+    font-size: 12px;
+    line-height: 1.6;
+    background: transparent;
+    font-family: var(--font-berkeley-mono);
+  }
+
+  .preview-frame {
+    flex: 1;
+    border: none;
+    background: #fff;
+  }
+
+  .preview-reload {
+    background: none;
+    border: none;
+    color: var(--color-storm-cloud);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 0 4px;
+  }
+
+  .preview-reload:hover { color: var(--color-porcelain); }
+</style>
