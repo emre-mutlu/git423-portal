@@ -1,0 +1,60 @@
+---
+const year = new Date().getFullYear();
+---
+
+<footer class="footer">
+  <div class="footer-container">
+    <div class="footer-info">
+      <span class="logo">GİT 423 Web Tasarımı</span>
+      <p class="instructor">Emre Mutlu</p>
+    </div>
+    
+    <div class="footer-copyright">
+      &copy; {year} Görsel İletişim Tasarımı
+    </div>
+  </div>
+</footer>
+
+<style>
+  .footer {
+    margin-top: var(--spacing-64);
+    padding: var(--spacing-24) 0;
+    border-top: 1px solid var(--color-charcoal-grey);
+    background: var(--surface-canvas);
+  }
+
+  .footer-container {
+    max-width: var(--page-max-width);
+    margin: 0 auto;
+    padding: 0 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .logo {
+    font-size: var(--text-body);
+    font-weight: var(--font-weight-w510);
+    color: var(--color-light-steel);
+  }
+
+  .instructor {
+    font-size: var(--text-caption);
+    color: var(--color-storm-cloud);
+    margin-top: var(--spacing-4);
+    margin-bottom: 0;
+  }
+
+  .footer-copyright {
+    font-size: var(--text-caption);
+    color: var(--color-fog-grey); /* De-emphasized text */
+  }
+
+  @media (max-width: 768px) {
+    .footer-container {
+      flex-direction: column;
+      gap: var(--spacing-16);
+      text-align: center;
+    }
+  }
+</style>

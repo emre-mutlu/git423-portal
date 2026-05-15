@@ -1,0 +1,328 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Öğrenci Not Paneli">
+	<div class="grading-container">
+		<header class="grading-header">
+			<h1>Not Merkezi</h1>
+			<p>Öğrenci numarası ile akademik durumu sorgulayın.</p>
+		</header>
+
+		<div class="card card-elevated" id="loginSection">
+			<div class="login-inner">
+				<h2>Sisteme Giriş</h2>
+				<div class="input-group">
+					<label for="studentId">Öğrenci Numarası</label>
+					<input type="text" id="studentId" class="input-linear font-mono" placeholder="Örn: 123456789" autocomplete="off" />
+				</div>
+				<button id="loginBtn" class="btn btn-primary">Sorgula</button>
+				<p id="errorMessage" class="error-msg hidden">Kayıt bulunamadı.</p>
+			</div>
+		</div>
+
+		<div id="dashboardSection" class="dashboard hidden">
+			
+			<div class="card card-elevated">
+				<div class="profile-header">
+					<div class="profile-info">
+						<h2 id="studentName">Öğrenci Adı</h2>
+						<span id="studentSube" class="badge badge-default">Şube</span>
+					</div>
+					<button id="logoutBtn" class="btn btn-subtle">Çıkış Yap</button>
+				</div>
+
+				<div class="stats-grid">
+					<div class="stat-box nested-card">
+						<span class="stat-label">Tamamlanan</span>
+						<span class="stat-value font-mono" id="submittedCount">0/8</span>
+					</div>
+					<div class="stat-box nested-card highlight">
+						<span class="stat-label">Vize Projeksiyonu</span>
+						<span class="stat-value font-mono" id="midtermAvg">0</span>
+					</div>
+					<div class="stat-box nested-card">
+						<span class="stat-label">Final Puanı</span>
+						<span class="stat-value font-mono" id="finalScore">-</span>
+					</div>
+				</div>
+
+				<div class="table-container nested-card">
+					<table class="grading-table">
+						<thead>
+							<tr>
+								<th>#</th>
+								<th>Görev</th>
+								<th>Durum</th>
+								<th class="text-right">Puan</th>
+							</tr>
+						</thead>
+						<tbody id="assignmentsTableBody">
+							<!-- JavaScript ile doldurulacak -->
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+</Layout>
+
+<script>
+	import { studentsData } from '../data/students.js';
+
+	document.addEventListener('DOMContentLoaded', () => {
+		const loginSection = document.getElementById('loginSection');
+		const dashboardSection = document.getElementById('dashboardSection');
+		const studentIdInput = document.getElementById('studentId') as HTMLInputElement;
+		const loginBtn = document.getElementById('loginBtn');
+		const logoutBtn = document.getElementById('logoutBtn');
+		const errorMessage = document.getElementById('errorMessage');
+
+		// UI Elements
+		const uiName = document.getElementById('studentName');
+		const uiSube = document.getElementById('studentSube');
+		const uiCount = document.getElementById('submittedCount');
+		const uiAvg = document.getElementById('midtermAvg');
+		const uiFinal = document.getElementById('finalScore');
+		const uiTableBody = document.getElementById('assignmentsTableBody');
+
+		const getStatusBadge = (status) => {
+			if (status === 'on-time') return '<span class="badge badge-success">Zamanında</span>';
+			if (status === 'late') return '<span class="badge badge-warning">Geç Teslim</span>';
+			if (status === 'not-submitted') return '<span class="badge badge-danger">Eksik</span>';
+			return '<span class="badge badge-neutral">Bekleniyor</span>';
+		};
+
+		const getScore = (status) => {
+			if (status === 'on-time') return 100;
+			if (status === 'late') return 60;
+			if (status === 'not-submitted') return 0;
+			return null;
+		};
+
+		const handleLogin = () => {
+			const id = studentIdInput.value.trim();
+			const student = studentsData.find(s => s.id === id);
+
+			if (student) {
+				errorMessage.classList.add('hidden');
+				renderDashboard(student);
+				loginSection.classList.add('hidden');
+				dashboardSection.classList.remove('hidden');
+			} else {
+				errorMessage.classList.remove('hidden');
+			}
+		};
+
+		const renderDashboard = (student) => {
+			if(uiName) uiName.textContent = student.name;
+			if(uiSube) uiSube.textContent = student.sube;
+			
+			let totalScore = 0;
+			let gradedCount = 0;
+			let tableHtml = '';
+
+			student.assignments.forEach((hw) => {
+				const score = getScore(hw.status);
+				const scoreDisplay = score !== null ? score : '-';
+				
+				if (score !== null) {
+					totalScore += score;
+					gradedCount++;
+				}
+
+				tableHtml += `
+					<tr>
+						<td class="font-mono text-muted">${String(hw.id).padStart(2, '0')}</td>
+						<td>${hw.title}</td>
+						<td>${getStatusBadge(hw.status)}</td>
+						<td class="font-mono text-right ${score !== null ? 'text-porcelain' : 'text-muted'}">${scoreDisplay}</td>
+					</tr>
+				`;
+			});
+
+			if(uiTableBody) uiTableBody.innerHTML = tableHtml;
+			if(uiCount) uiCount.textContent = `${gradedCount}/8`;
+			
+			const avg = gradedCount > 0 ? Math.round(totalScore / gradedCount) : 0;
+			if(uiAvg) uiAvg.textContent = avg.toString();
+
+			if(uiFinal) uiFinal.textContent = student.finalProject !== null ? student.finalProject.toString() : '-';
+		};
+
+		loginBtn?.addEventListener('click', handleLogin);
+		studentIdInput?.addEventListener('keypress', (e) => {
+			if (e.key === 'Enter') handleLogin();
+		});
+
+		logoutBtn?.addEventListener('click', () => {
+			studentIdInput.value = '';
+			dashboardSection.classList.add('hidden');
+			loginSection.classList.remove('hidden');
+		});
+	});
+</script>
+
+<style>
+	.grading-container {
+		max-width: 720px;
+		margin: 0 auto;
+		padding-top: var(--spacing-48);
+	}
+
+	.grading-header {
+		margin-bottom: var(--spacing-32);
+	}
+
+	.grading-header p {
+		margin-bottom: 0;
+	}
+
+	.login-inner {
+		max-width: 340px;
+		margin: 0 auto;
+		padding: 0 var(--spacing-24);
+	}
+
+	.login-inner h2 {
+		font-size: var(--text-heading);
+		margin-bottom: var(--spacing-24);
+	}
+
+	.input-group {
+		margin-bottom: var(--spacing-16);
+	}
+
+	.input-group label {
+		display: block;
+		margin-bottom: var(--spacing-8);
+		font-size: var(--text-caption);
+		color: var(--color-storm-cloud);
+	}
+
+	.input-group input {
+		width: 100%;
+	}
+
+	#loginBtn {
+		width: 100%;
+	}
+
+	.error-msg {
+		color: var(--color-warning-red);
+		font-size: var(--text-caption);
+		margin-top: var(--spacing-12);
+	}
+
+	.hidden {
+		display: none !important;
+	}
+
+	/* Dashboard Elements */
+	.profile-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-start;
+		margin-bottom: var(--spacing-24);
+		padding: 0 var(--spacing-24);
+	}
+
+	.profile-info h2 {
+		margin-bottom: var(--spacing-8);
+	}
+
+	/* Linear Badges */
+	.badge {
+		padding: 2px 6px;
+		border-radius: var(--radius-tags);
+		font-size: 11px;
+		font-weight: var(--font-weight-w510);
+		display: inline-flex;
+		align-items: center;
+	}
+
+	.badge-default {
+		background: var(--color-gunmetal);
+		color: var(--color-storm-cloud);
+		border: 1px solid var(--color-charcoal-grey);
+	}
+
+	.badge-success { background: rgba(0, 141, 44, 0.15); color: var(--color-emerald); border: 1px solid rgba(0, 141, 44, 0.3); }
+	.badge-warning { background: rgba(235, 87, 87, 0.1); color: var(--color-warning-red); border: 1px solid rgba(235, 87, 87, 0.2); }
+	.badge-danger { background: rgba(235, 87, 87, 0.2); color: #ff8c8c; border: 1px solid rgba(235, 87, 87, 0.4); }
+	.badge-neutral { background: var(--color-charcoal-grey); color: var(--color-fog-grey); }
+
+	/* Nested Cards for Linear Style */
+	.nested-card {
+		background: var(--surface-canvas);
+		border-radius: var(--radius-cards);
+		padding: var(--spacing-16);
+	}
+
+	.stats-grid {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: var(--spacing-12);
+		margin: 0 var(--spacing-24) var(--spacing-24);
+	}
+
+	.stat-box {
+		text-align: left;
+	}
+
+	.stat-label {
+		display: block;
+		font-size: var(--text-caption);
+		color: var(--color-storm-cloud);
+		margin-bottom: var(--spacing-8);
+	}
+
+	.stat-value {
+		font-size: 20px;
+		color: var(--color-porcelain);
+	}
+
+	.highlight {
+		box-shadow: inset 2px 0 0 var(--color-neon-lime);
+	}
+
+	.table-container {
+		margin: 0 var(--spacing-24);
+		padding: 0;
+		overflow: hidden;
+		border: 1px solid var(--color-charcoal-grey);
+	}
+
+	.grading-table {
+		width: 100%;
+		border-collapse: collapse;
+		font-size: 13px;
+	}
+
+	.grading-table th, .grading-table td {
+		padding: var(--spacing-12) var(--spacing-16);
+		text-align: left;
+		border-bottom: 1px solid var(--color-charcoal-grey);
+	}
+
+	.grading-table th {
+		color: var(--color-fog-grey);
+		font-weight: var(--font-weight-regular);
+		font-size: var(--text-caption);
+		background: rgba(255, 255, 255, 0.02);
+	}
+
+	.grading-table tr:last-child td {
+		border-bottom: none;
+	}
+
+	.text-right { text-align: right !important; }
+	.text-muted { color: var(--color-fog-grey); }
+	.text-porcelain { color: var(--color-porcelain); }
+
+	@media (max-width: 640px) {
+		.stats-grid {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>
