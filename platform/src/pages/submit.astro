@@ -1,118 +1,135 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import { supabaseAdmin } from '../lib/supabase';
+
+const student = Astro.locals.student;
+
+const { data: assignments } = await supabaseAdmin
+  .from('assignments')
+  .select('id, title, deadline')
+  .eq('is_active', true)
+  .order('deadline', { ascending: true });
+
+const hasAssignments = assignments && assignments.length > 0;
 ---
 
 <Layout title="Ödev Yükle">
 	<div class="submit-container">
 		<header class="submit-header">
 			<h1>Ödev Yükleme Portalı</h1>
-			<p>Geliştirdiğiniz dosyaları seçin ve sisteme yükleyin.</p>
+			<p>Projenizi ZIP olarak sıkıştırın ve sisteme yükleyin.</p>
 		</header>
 
 		<div class="card card-elevated form-card">
-			<form id="uploadForm" class="upload-form">
-				
-				<div class="input-row">
-					<div class="input-group">
-						<label for="studentId">Öğrenci Numarası</label>
-						<input type="text" id="studentId" name="studentId" class="input-linear font-mono" placeholder="Örn: 234401037" required autocomplete="off" />
-					</div>
+			{!hasAssignments ? (
+				<p class="no-assign">Şu anda aktif ödev bulunmuyor.</p>
+			) : (
+				<form id="uploadForm" class="upload-form">
+					<input type="hidden" id="studentId" value={student.id} />
 
 					<div class="input-group">
-						<label for="week">Hafta</label>
-						<select id="week" name="week" class="input-linear" required>
+						<label for="assignmentId">Ödev</label>
+						<select id="assignmentId" name="assignmentId" class="input-linear" required>
 							<option value="" disabled selected>Seçiniz</option>
-							<option value="hafta-1">Hafta 1</option>
-							<option value="hafta-2">Hafta 2</option>
-							<option value="hafta-3">Hafta 3</option>
-							<option value="hafta-4">Hafta 4</option>
+							{assignments.map(a => {
+								const deadline = new Date(a.deadline);
+								const isPast = deadline < new Date();
+								const label = `${a.title} — Son: ${deadline.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}${isPast ? ' (Geç)' : ''}`;
+								return <option value={a.id}>{label}</option>;
+							})}
 						</select>
 					</div>
-				</div>
 
-				<div class="input-group">
-					<label>Proje Dosyaları (.html, .css, .js)</label>
-					<div class="file-drop-area" id="dropArea">
-						<span class="drop-icon">📄</span>
-						<p class="drop-msg">Dosyaları buraya sürükleyin veya <b>tıklayarak seçin</b></p>
-						<input type="file" id="fileInput" name="files" multiple accept=".html,.css,.js" class="hidden-file-input" required />
+					<div class="input-group">
+						<label>Proje ZIP Dosyası</label>
+						<div class="file-drop-area" id="dropArea">
+							<span class="drop-icon">📦</span>
+							<p class="drop-msg">ZIP dosyasını buraya sürükleyin veya <b>tıklayarak seçin</b></p>
+							<input type="file" id="fileInput" name="file" accept=".zip" class="hidden-file-input" required />
+						</div>
+						<div id="fileList" class="file-list"></div>
 					</div>
-					<div id="fileList" class="file-list"></div>
-				</div>
 
-				<div class="actions">
-					<button type="submit" id="submitBtn" class="btn btn-primary w-full">
-						<span id="btnText">Dosyaları Gönder</span>
-						<span id="loader" class="loader hidden"></span>
-					</button>
-				</div>
-				
-				<div id="statusMessage" class="status-msg hidden"></div>
-			</form>
+					<div class="actions">
+						<button type="submit" id="submitBtn" class="btn btn-primary w-full">
+							<span id="btnText">Ödev Gönder</span>
+							<span id="loader" class="loader hidden"></span>
+						</button>
+					</div>
+
+					<div id="statusMessage" class="status-msg hidden"></div>
+				</form>
+			)}
 		</div>
 	</div>
 </Layout>
 
 <script>
 	document.addEventListener('DOMContentLoaded', () => {
-		const form = document.getElementById('uploadForm') as HTMLFormElement;
-		const dropArea = document.getElementById('dropArea');
+		const form = document.getElementById('uploadForm') as HTMLFormElement | null;
+		if (!form) return;
+
+		const dropArea = document.getElementById('dropArea')!;
 		const fileInput = document.getElementById('fileInput') as HTMLInputElement;
-		const fileList = document.getElementById('fileList');
+		const fileList = document.getElementById('fileList')!;
 		const submitBtn = document.getElementById('submitBtn') as HTMLButtonElement;
-		const btnText = document.getElementById('btnText');
-		const loader = document.getElementById('loader');
-		const statusMessage = document.getElementById('statusMessage');
+		const btnText = document.getElementById('btnText')!;
+		const loader = document.getElementById('loader')!;
+		const statusMessage = document.getElementById('statusMessage')!;
 
-		// File Selection handling
-		dropArea?.addEventListener('click', () => fileInput?.click());
+		dropArea.addEventListener('click', () => fileInput.click());
 
-		dropArea?.addEventListener('dragover', (e) => {
+		dropArea.addEventListener('dragover', (e) => {
 			e.preventDefault();
 			dropArea.classList.add('dragover');
 		});
 
-		dropArea?.addEventListener('dragleave', () => {
+		dropArea.addEventListener('dragleave', () => {
 			dropArea.classList.remove('dragover');
 		});
 
-		dropArea?.addEventListener('drop', (e) => {
+		dropArea.addEventListener('drop', (e) => {
 			e.preventDefault();
 			dropArea.classList.remove('dragover');
-			if (e.dataTransfer && e.dataTransfer.files) {
+			if (e.dataTransfer?.files.length) {
 				fileInput.files = e.dataTransfer.files;
 				updateFileList();
 			}
 		});
 
-		fileInput?.addEventListener('change', updateFileList);
+		fileInput.addEventListener('change', updateFileList);
 
 		function updateFileList() {
-			if (!fileList || !fileInput.files) return;
 			fileList.innerHTML = '';
-			Array.from(fileInput.files).forEach(file => {
-				const el = document.createElement('div');
-				el.className = 'file-item font-mono';
-				el.textContent = `+ ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
-				fileList.appendChild(el);
-			});
+			if (!fileInput.files?.length) return;
+			const file = fileInput.files[0];
+			const el = document.createElement('div');
+			el.className = 'file-item font-mono';
+			el.textContent = `+ ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+			fileList.appendChild(el);
 		}
 
-		// Form Submission
-		form?.addEventListener('submit', async (e) => {
+		form.addEventListener('submit', async (e) => {
 			e.preventDefault();
-			
-			// UI State: Loading
+
+			const studentId = (document.getElementById('studentId') as HTMLInputElement).value;
+			const assignmentId = (document.getElementById('assignmentId') as HTMLSelectElement).value;
+			const file = fileInput.files?.[0];
+
+			if (!assignmentId || !file) return;
+
 			submitBtn.disabled = true;
-			if(btnText) btnText.textContent = 'Yükleniyor...';
-			loader?.classList.remove('hidden');
-			if(statusMessage) {
-				statusMessage.className = 'status-msg hidden';
-				statusMessage.textContent = '';
-			}
+			btnText.textContent = 'Yükleniyor...';
+			loader.classList.remove('hidden');
+			statusMessage.className = 'status-msg hidden';
+			statusMessage.textContent = '';
 
 			try {
-				const formData = new FormData(form);
+				const formData = new FormData();
+				formData.append('studentId', studentId);
+				formData.append('assignmentId', assignmentId);
+				formData.append('file', file);
+
 				const response = await fetch('/api/submit-homework', {
 					method: 'POST',
 					body: formData
@@ -121,25 +138,20 @@ import Layout from '../layouts/Layout.astro';
 				const result = await response.json();
 
 				if (response.ok) {
-					if(statusMessage) {
-						statusMessage.textContent = '✅ ' + result.message;
-						statusMessage.className = 'status-msg success';
-					}
+					statusMessage.textContent = '✓ ' + result.message;
+					statusMessage.className = 'status-msg success';
 					form.reset();
-					if(fileList) fileList.innerHTML = '';
+					fileList.innerHTML = '';
 				} else {
 					throw new Error(result.error || 'Yükleme başarısız.');
 				}
 			} catch (error: any) {
-				if(statusMessage) {
-					statusMessage.textContent = '❌ ' + error.message;
-					statusMessage.className = 'status-msg error';
-				}
+				statusMessage.textContent = '✗ ' + error.message;
+				statusMessage.className = 'status-msg error';
 			} finally {
-				// UI State: Reset
 				submitBtn.disabled = false;
-				if(btnText) btnText.textContent = 'Dosyaları Gönder';
-				loader?.classList.add('hidden');
+				btnText.textContent = 'Ödev Gönder';
+				loader.classList.add('hidden');
 			}
 		});
 	});
@@ -160,10 +172,15 @@ import Layout from '../layouts/Layout.astro';
 		padding: var(--spacing-32);
 	}
 
-	.input-row {
-		display: grid;
-		grid-template-columns: 2fr 1fr;
-		gap: var(--spacing-16);
+	.no-assign {
+		color: var(--color-storm-cloud);
+		font-size: var(--text-body);
+		text-align: center;
+		padding: var(--spacing-24) 0;
+		margin: 0;
+	}
+
+	.input-group {
 		margin-bottom: var(--spacing-24);
 	}
 
@@ -185,6 +202,7 @@ import Layout from '../layouts/Layout.astro';
 		font-size: var(--text-body);
 		outline: none;
 		transition: border-color var(--transition-fast);
+		box-sizing: border-box;
 	}
 
 	.input-linear:focus {
@@ -242,7 +260,7 @@ import Layout from '../layouts/Layout.astro';
 	}
 
 	.file-list {
-		margin-bottom: var(--spacing-24);
+		margin-bottom: var(--spacing-8);
 	}
 
 	.file-item {
@@ -301,11 +319,5 @@ import Layout from '../layouts/Layout.astro';
 		background: rgba(235, 87, 87, 0.1);
 		color: #ff8c8c;
 		border: 1px solid rgba(235, 87, 87, 0.3);
-	}
-
-	@media (max-width: 640px) {
-		.input-row {
-			grid-template-columns: 1fr;
-		}
 	}
 </style>

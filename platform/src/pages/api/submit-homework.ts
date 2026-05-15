@@ -1,114 +1,88 @@
 import type { APIRoute } from 'astro';
-import registry from '../../data/registry.json';
-
-const REPO_OWNER = 'emre-mutlu';
-const REPO_NAME = 'git423-odevler';
+import { validateSession } from '../../lib/auth';
+import { supabaseAdmin } from '../../lib/supabase';
 
 export const POST: APIRoute = async ({ request }) => {
+  const cookies = request.headers.get('cookie');
+  const student = await validateSession(cookies);
+  if (!student) {
+    return new Response(JSON.stringify({ error: 'Oturum bulunamadı.' }), { status: 401 });
+  }
+
   try {
     const formData = await request.formData();
-    const studentId = formData.get('studentId')?.toString().trim();
-    let week = formData.get('week')?.toString().trim(); // e.g. "hafta-1"
-    const files = formData.getAll('files') as File[];
+    const assignmentId = formData.get('assignmentId')?.toString().trim();
+    const file = formData.get('file') as File | null;
 
-    if (!studentId || !week || files.length === 0) {
+    if (!assignmentId || !file) {
       return new Response(JSON.stringify({ error: 'Eksik bilgi veya dosya.' }), { status: 400 });
     }
 
-    const studentInfo = (registry as any)[studentId];
-    if (!studentInfo) {
-      return new Response(JSON.stringify({ error: `Öğrenci numarası (${studentId}) sistemde bulunamadı.` }), { status: 404 });
+    if (!file.name.endsWith('.zip')) {
+      return new Response(JSON.stringify({ error: 'Sadece ZIP dosyası kabul edilmektedir.' }), { status: 400 });
     }
 
-    const subeFolderName = studentInfo.sube; // e.g. "Sube-1"
-    const studentFolderName = studentInfo.folderName; // e.g. "Irem-Meryem-Toprak"
-    const weekFolderName = week.replace('hafta-', 'Hafta-'); // e.g. "Hafta-1"
+    // Deadline kontrolü
+    const { data: assignment, error: assignErr } = await supabaseAdmin
+      .from('assignments')
+      .select('id, deadline, is_active')
+      .eq('id', assignmentId)
+      .single();
 
-    const token = import.meta.env.GH_TOKEN || process.env.GH_TOKEN;
-    if (!token) throw new Error("Sistem hatası: GitHub yetkilendirme anahtarı bulunamadı.");
+    if (assignErr || !assignment || !assignment.is_active) {
+      return new Response(JSON.stringify({ error: 'Ödev bulunamadı veya aktif değil.' }), { status: 404 });
+    }
 
-    // 2. Get main branch SHA
-    const refRes = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/git/refs/heads/main`, {
-      headers: { 'Authorization': `Bearer ${token}`, 'User-Agent': 'Astro-Backend' }
-    });
-    if (!refRes.ok) throw new Error("Ana depo (main) bulunamadı.");
-    const refData = await refRes.json();
-    const mainSha = refData.object.sha;
+    const now = new Date();
+    const deadline = new Date(assignment.deadline);
+    const isLate = now > deadline;
 
-    // 3. Create a new branch for the student submission
-    const branchName = `submission-${week}-${studentId}-${Date.now()}`;
-    const createBranchRes = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/git/refs`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Accept': 'application/vnd.github.v3+json',
-        'User-Agent': 'Astro-Backend',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ ref: `refs/heads/${branchName}`, sha: mainSha })
-    });
-    if (!createBranchRes.ok) throw new Error("Branch oluşturulamadı.");
+    // Supabase Storage'a yükle
+    const storagePath = `${student.id}/${assignmentId}.zip`;
+    const buffer = await file.arrayBuffer();
 
-    // 4. Upload files to the new branch
-    const uploadResults = [];
-    for (const file of files) {
-      const buffer = await file.arrayBuffer();
-      const base64Content = Buffer.from(buffer).toString('base64');
-      
-      // NEW HIERARCHY: Sube-1/Hafta-1/Irem-Meryem-Toprak/index.html
-      const filePath = `${subeFolderName}/${weekFolderName}/${studentFolderName}/${file.name}`;
-      const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${filePath}`;
-
-      const githubBody = {
-        message: `Ödev Yükleme: ${studentFolderName} - ${week} - ${file.name}`,
-        content: base64Content,
-        branch: branchName
-      };
-
-      const response = await fetch(url, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/vnd.github.v3+json',
-          'User-Agent': 'Astro-Backend',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(githubBody)
+    const { error: uploadError } = await supabaseAdmin.storage
+      .from('submissions')
+      .upload(storagePath, buffer, {
+        contentType: 'application/zip',
+        upsert: true
       });
 
-      if (!response.ok) throw new Error(`Dosya yüklenemedi: ${file.name}`);
-      uploadResults.push(file.name);
+    if (uploadError) {
+      console.error('Storage upload error:', uploadError);
+      return new Response(JSON.stringify({ error: 'Dosya yüklenirken bir hata oluştu.' }), { status: 500 });
     }
 
-    // 5. Create Pull Request
-    const prRes = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/pulls`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Accept': 'application/vnd.github.v3+json',
-        'User-Agent': 'Astro-Backend',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        title: `${weekFolderName.toUpperCase()} Ödev Teslimi - ${studentInfo.folderName.replace(/-/g, ' ')}`,
-        head: branchName,
-        base: 'main',
-        body: `Bu PR sistem tarafından **${studentInfo.folderName.replace(/-/g, ' ')} (${studentId})** numaralı öğrencinin ödev teslimi için otomatik açılmıştır.`
-      })
-    });
-    
-    if (!prRes.ok) throw new Error("Pull Request oluşturulamadı.");
+    // submissions tablosuna kayıt (upsert)
+    const { error: dbError } = await supabaseAdmin
+      .from('submissions')
+      .upsert({
+        student_id: student.id,
+        assignment_id: assignmentId,
+        file_path: storagePath,
+        submitted_at: now.toISOString(),
+        is_late: isLate,
+        status: 'submitted'
+      }, {
+        onConflict: 'student_id,assignment_id'
+      });
 
-    return new Response(JSON.stringify({ 
-      success: true, 
-      message: `${uploadResults.length} dosya başarıyla GitHub'a yüklendi!` 
+    if (dbError) {
+      console.error('DB upsert error:', dbError);
+      return new Response(JSON.stringify({ error: 'Kayıt sırasında bir hata oluştu.' }), { status: 500 });
+    }
+
+    const lateNote = isLate ? ' (Geç teslim olarak kaydedildi.)' : '';
+    return new Response(JSON.stringify({
+      success: true,
+      message: `Ödeviniz başarıyla teslim edildi.${lateNote}`
     }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }
     });
 
   } catch (error: any) {
-    console.error('Upload error:', error);
+    console.error('Submit error:', error);
     return new Response(JSON.stringify({ error: error.message || 'Bilinmeyen bir hata oluştu.' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
