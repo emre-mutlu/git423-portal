@@ -1,0 +1,277 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { supabaseAdmin } from '../lib/supabase';
+
+const student = Astro.locals.student!;
+
+// Bu öğrencinin tüm teslimlerini assignment bilgileriyle çek
+const { data: submissions } = await supabaseAdmin
+  .from('submissions')
+  .select(`
+    id,
+    submitted_at,
+    is_late,
+    status,
+    score,
+    assignments (
+      id,
+      week_number,
+      title,
+      deadline_at
+    )
+  `)
+  .eq('student_id', student.id)
+  .order('submitted_at', { ascending: true });
+
+// Aktif ödevlerin tümünü çek (teslim edilmemiş olanları göstermek için)
+const { data: allAssignments } = await supabaseAdmin
+  .from('assignments')
+  .select('id, week_number, title, deadline_at')
+  .eq('is_active', true)
+  .order('week_number', { ascending: true });
+
+// Her ödev için durum hesapla
+type AssignmentRow = {
+  id: string;
+  week_number: number;
+  title: string;
+  deadline_at: string;
+  status: string;
+  score: number | null;
+  submitted_at: string | null;
+};
+
+const rows: AssignmentRow[] = (allAssignments ?? []).map(a => {
+  const sub = (submissions ?? []).find(s => (s.assignments as any)?.id === a.id);
+  if (!sub) {
+    const deadline = new Date(a.deadline_at);
+    const now = new Date();
+    return {
+      id: a.id,
+      week_number: a.week_number,
+      title: a.title,
+      deadline_at: a.deadline_at,
+      status: deadline < now ? 'not-submitted' : 'pending',
+      score: null,
+      submitted_at: null,
+    };
+  }
+  return {
+    id: a.id,
+    week_number: a.week_number,
+    title: a.title,
+    deadline_at: a.deadline_at,
+    status: sub.status,
+    score: sub.score,
+    submitted_at: sub.submitted_at,
+  };
+});
+
+// İstatistikler
+const gradedRows = rows.filter(r => r.score !== null);
+const submittedCount = (submissions ?? []).length;
+const totalAssignments = (allAssignments ?? []).length;
+const midtermAvg = gradedRows.length > 0
+  ? Math.round(gradedRows.reduce((sum, r) => sum + (r.score ?? 0), 0) / gradedRows.length)
+  : null;
+
+function getStatusLabel(status: string, isLate: boolean | null = null): string {
+  if (status === 'graded') return isLate ? 'Geç Teslim' : 'Zamanında';
+  if (status === 'pending' && submittedCount > 0) return 'İnceleniyor';
+  if (status === 'not-submitted') return 'Eksik';
+  return 'Bekleniyor';
+}
+
+function getStatusClass(status: string, isLate: boolean | null = null): string {
+  if (status === 'graded') return isLate ? 'badge-warning' : 'badge-success';
+  if (status === 'not-submitted') return 'badge-danger';
+  if (status === 'pending') return 'badge-neutral';
+  return 'badge-neutral';
+}
+---
+
+<Layout title="Not Paneli">
+  <div class="grades-container">
+    <div class="card card-elevated">
+      <div class="profile-header">
+        <div class="profile-info">
+          <h2>{student.name_masked}</h2>
+          <span class="badge badge-default">{student.branch}</span>
+        </div>
+        <form action="/api/auth/logout" method="POST">
+          <button type="submit" class="btn btn-subtle">Çıkış Yap</button>
+        </form>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-box nested-card">
+          <span class="stat-label">Tamamlanan</span>
+          <span class="stat-value font-mono">{submittedCount}/{totalAssignments}</span>
+        </div>
+        <div class="stat-box nested-card highlight">
+          <span class="stat-label">Vize Projeksiyonu</span>
+          <span class="stat-value font-mono">{midtermAvg ?? '—'}</span>
+        </div>
+        <div class="stat-box nested-card">
+          <span class="stat-label">Öğrenci No</span>
+          <span class="stat-value font-mono" style="font-size:14px">{student.student_number}</span>
+        </div>
+      </div>
+
+      <div class="table-container nested-card">
+        {rows.length === 0 ? (
+          <p class="empty-state">Henüz aktif ödev bulunmuyor.</p>
+        ) : (
+          <table class="grading-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Görev</th>
+                <th>Durum</th>
+                <th class="text-right">Puan</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map(row => {
+                const isLate = row.status === 'graded'
+                  ? (submissions ?? []).find(s => (s.assignments as any)?.id === row.id)?.is_late ?? null
+                  : null;
+                const statusLabel = getStatusLabel(row.status, isLate);
+                const statusClass = getStatusClass(row.status, isLate);
+                const scoreDisplay = row.score !== null ? row.score.toString() : '—';
+                return (
+                  <tr>
+                    <td class="font-mono text-muted">{String(row.week_number).padStart(2, '0')}</td>
+                    <td>{row.title}</td>
+                    <td><span class={`badge ${statusClass}`}>{statusLabel}</span></td>
+                    <td class={`font-mono text-right ${row.score !== null ? 'text-porcelain' : 'text-muted'}`}>
+                      {scoreDisplay}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .grades-container {
+    max-width: 720px;
+    margin: 0 auto;
+    padding-top: var(--spacing-48);
+  }
+
+  .profile-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--spacing-24);
+    padding: var(--spacing-24) var(--spacing-24) 0;
+  }
+
+  .profile-info h2 {
+    margin-bottom: var(--spacing-8);
+  }
+
+  .badge {
+    padding: 2px 6px;
+    border-radius: var(--radius-tags);
+    font-size: 11px;
+    font-weight: var(--font-weight-w510);
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .badge-default {
+    background: var(--color-gunmetal);
+    color: var(--color-storm-cloud);
+    border: 1px solid var(--color-charcoal-grey);
+  }
+
+  .badge-success { background: rgba(0, 141, 44, 0.15); color: var(--color-emerald); border: 1px solid rgba(0, 141, 44, 0.3); }
+  .badge-warning { background: rgba(235, 87, 87, 0.1); color: var(--color-warning-red); border: 1px solid rgba(235, 87, 87, 0.2); }
+  .badge-danger { background: rgba(235, 87, 87, 0.2); color: #ff8c8c; border: 1px solid rgba(235, 87, 87, 0.4); }
+  .badge-neutral { background: var(--color-charcoal-grey); color: var(--color-fog-grey); border: none; }
+
+  .nested-card {
+    background: var(--surface-canvas);
+    border-radius: var(--radius-cards);
+    padding: var(--spacing-16);
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-12);
+    margin: 0 var(--spacing-24) var(--spacing-24);
+  }
+
+  .stat-box { text-align: left; }
+
+  .stat-label {
+    display: block;
+    font-size: var(--text-caption);
+    color: var(--color-storm-cloud);
+    margin-bottom: var(--spacing-8);
+  }
+
+  .stat-value {
+    font-size: 20px;
+    color: var(--color-porcelain);
+  }
+
+  .highlight {
+    box-shadow: inset 2px 0 0 var(--color-neon-lime);
+  }
+
+  .table-container {
+    margin: 0 var(--spacing-24) var(--spacing-24);
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid var(--color-charcoal-grey);
+  }
+
+  .empty-state {
+    padding: var(--spacing-32);
+    text-align: center;
+    color: var(--color-storm-cloud);
+    font-size: var(--text-body);
+    margin: 0;
+  }
+
+  .grading-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  .grading-table th,
+  .grading-table td {
+    padding: var(--spacing-12) var(--spacing-16);
+    text-align: left;
+    border-bottom: 1px solid var(--color-charcoal-grey);
+  }
+
+  .grading-table th {
+    color: var(--color-fog-grey);
+    font-weight: var(--font-weight-regular);
+    font-size: var(--text-caption);
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  .grading-table tr:last-child td {
+    border-bottom: none;
+  }
+
+  .text-right { text-align: right !important; }
+  .text-muted { color: var(--color-fog-grey); }
+  .text-porcelain { color: var(--color-porcelain); }
+
+  @media (max-width: 640px) {
+    .stats-grid { grid-template-columns: 1fr; }
+  }
+</style>
