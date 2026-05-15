@@ -1,4 +1,5 @@
 [build]
+  command = "echo 'Pre-built in GitHub Actions, skipping rebuild'"
   publish = "dist"
 
 [functions]
