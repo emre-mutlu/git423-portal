@@ -4,8 +4,3 @@
 
 [functions]
   directory = ".netlify/v1/functions"
-
-[[redirects]]
-  from = "/*"
-  to = "/.netlify/functions/ssr"
-  status = 200
