@@ -27,7 +27,9 @@ jobs:
           PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
-        run: npm run build
+        run: |
+          npm run build
+          find .netlify -name "*.mjs" -exec sed -i 's/clientAddress: context\.ip/clientAddress: context?.ip/g' {} \;
 
       - name: Deploy to Netlify
         working-directory: platform
