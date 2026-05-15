@@ -1,0 +1,259 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { validateSession } from '../lib/auth';
+
+// Zaten giriş yapmışsa grades'e yönlendir
+const cookies = Astro.request.headers.get('cookie');
+const student = await validateSession(cookies);
+if (student) return Astro.redirect('/grades');
+---
+
+<Layout title="Giriş">
+  <div class="login-container">
+    <div class="login-header">
+      <h1>GİT 423</h1>
+      <p>Öğrenci numaranızla sisteme giriş yapın.</p>
+    </div>
+
+    <!-- Adım 1: Öğrenci numarası -->
+    <div class="card card-elevated form-card" id="stepNumber">
+      <h2>Giriş</h2>
+      <div class="input-group">
+        <label for="studentNumber">Öğrenci Numarası</label>
+        <input type="text" id="studentNumber" class="input-linear font-mono"
+          placeholder="Örn: 234401037" autocomplete="off" inputmode="numeric" />
+      </div>
+      <button id="btnCheckNumber" class="btn btn-primary w-full">Devam Et</button>
+      <p id="errorNumber" class="error-msg hidden">Bu numaraya ait kayıt bulunamadı.</p>
+    </div>
+
+    <!-- Adım 2a: PIN girişi -->
+    <div class="card card-elevated form-card hidden" id="stepPin">
+      <h2>PIN Girin</h2>
+      <p class="step-desc">Öğrenci numaranız: <span id="displayNumber" class="font-mono"></span></p>
+      <div class="input-group">
+        <label for="pinInput">4 Haneli PIN</label>
+        <input type="password" id="pinInput" class="input-linear font-mono pin-input"
+          placeholder="••••" maxlength="4" inputmode="numeric" autocomplete="current-password" />
+      </div>
+      <button id="btnLogin" class="btn btn-primary w-full">Giriş Yap</button>
+      <button id="btnBackFromPin" class="btn btn-subtle w-full">← Geri</button>
+      <p id="errorPin" class="error-msg hidden">PIN hatalı. Tekrar deneyin.</p>
+    </div>
+
+    <!-- Adım 2b: İlk PIN belirleme -->
+    <div class="card card-elevated form-card hidden" id="stepSetPin">
+      <h2>PIN Belirleyin</h2>
+      <p class="step-desc">İlk girişiniz. Sisteme erişmek için 4 haneli bir PIN belirleyin.</p>
+      <div class="input-group">
+        <label for="newPin">Yeni PIN</label>
+        <input type="password" id="newPin" class="input-linear font-mono pin-input"
+          placeholder="••••" maxlength="4" inputmode="numeric" autocomplete="new-password" />
+      </div>
+      <div class="input-group">
+        <label for="confirmPin">PIN Tekrar</label>
+        <input type="password" id="confirmPin" class="input-linear font-mono pin-input"
+          placeholder="••••" maxlength="4" inputmode="numeric" autocomplete="new-password" />
+      </div>
+      <button id="btnSetPin" class="btn btn-primary w-full">PIN Belirle ve Giriş Yap</button>
+      <p id="errorSetPin" class="error-msg hidden">PIN'ler eşleşmiyor veya geçersiz.</p>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  let currentStudentNumber = '';
+  let needsPin = false;
+  let pendingStudentId = '';
+
+  const stepNumber = document.getElementById('stepNumber')!;
+  const stepPin = document.getElementById('stepPin')!;
+  const stepSetPin = document.getElementById('stepSetPin')!;
+  const studentNumberInput = document.getElementById('studentNumber') as HTMLInputElement;
+  const pinInput = document.getElementById('pinInput') as HTMLInputElement;
+  const newPinInput = document.getElementById('newPin') as HTMLInputElement;
+  const confirmPinInput = document.getElementById('confirmPin') as HTMLInputElement;
+  const displayNumber = document.getElementById('displayNumber')!;
+  const errorNumber = document.getElementById('errorNumber')!;
+  const errorPin = document.getElementById('errorPin')!;
+  const errorSetPin = document.getElementById('errorSetPin')!;
+
+  function showStep(step: 'number' | 'pin' | 'setPin') {
+    stepNumber.classList.toggle('hidden', step !== 'number');
+    stepPin.classList.toggle('hidden', step !== 'pin');
+    stepSetPin.classList.toggle('hidden', step !== 'setPin');
+  }
+
+  // Adım 1: Numara kontrolü
+  document.getElementById('btnCheckNumber')!.addEventListener('click', async () => {
+    const number = studentNumberInput.value.trim();
+    if (!number) return;
+
+    errorNumber.classList.add('hidden');
+
+    const res = await fetch('/api/auth/check-number', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ studentNumber: number })
+    });
+    const data = await res.json();
+
+    if (!res.ok || !data.found) {
+      errorNumber.classList.remove('hidden');
+      return;
+    }
+
+    currentStudentNumber = number;
+    displayNumber.textContent = number;
+
+    if (data.needsPin) {
+      pendingStudentId = data.studentId;
+      showStep('setPin');
+      newPinInput.focus();
+    } else {
+      showStep('pin');
+      pinInput.focus();
+    }
+  });
+
+  studentNumberInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') document.getElementById('btnCheckNumber')!.click();
+  });
+
+  // Adım 2a: Giriş
+  document.getElementById('btnLogin')!.addEventListener('click', async () => {
+    const pin = pinInput.value.trim();
+    if (pin.length !== 4) return;
+
+    errorPin.classList.add('hidden');
+
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ studentNumber: currentStudentNumber, pin })
+    });
+
+    if (res.ok) {
+      window.location.href = '/grades';
+    } else {
+      errorPin.classList.remove('hidden');
+      pinInput.value = '';
+      pinInput.focus();
+    }
+  });
+
+  pinInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') document.getElementById('btnLogin')!.click();
+  });
+
+  document.getElementById('btnBackFromPin')!.addEventListener('click', () => {
+    showStep('number');
+    pinInput.value = '';
+  });
+
+  // Adım 2b: PIN belirleme
+  document.getElementById('btnSetPin')!.addEventListener('click', async () => {
+    const pin = newPinInput.value.trim();
+    const confirm = confirmPinInput.value.trim();
+
+    errorSetPin.classList.add('hidden');
+
+    if (pin.length !== 4 || !/^\d{4}$/.test(pin) || pin !== confirm) {
+      errorSetPin.classList.remove('hidden');
+      return;
+    }
+
+    const res = await fetch('/api/auth/set-pin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ studentId: pendingStudentId, pin })
+    });
+
+    if (res.ok) {
+      window.location.href = '/grades';
+    } else {
+      errorSetPin.textContent = 'Bir hata oluştu. Tekrar deneyin.';
+      errorSetPin.classList.remove('hidden');
+    }
+  });
+
+  confirmPinInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') document.getElementById('btnSetPin')!.click();
+  });
+</script>
+
+<style>
+  .login-container {
+    max-width: 400px;
+    margin: 0 auto;
+    padding-top: var(--spacing-96, 80px);
+  }
+
+  .login-header {
+    margin-bottom: var(--spacing-40);
+    text-align: center;
+  }
+
+  .login-header h1 {
+    font-size: 32px;
+    margin-bottom: var(--spacing-8);
+  }
+
+  .login-header p {
+    color: var(--color-storm-cloud);
+    font-size: var(--text-body);
+    margin: 0;
+  }
+
+  .form-card {
+    padding: var(--spacing-32);
+  }
+
+  .form-card h2 {
+    font-size: 18px;
+    margin-bottom: var(--spacing-24);
+  }
+
+  .step-desc {
+    color: var(--color-storm-cloud);
+    font-size: 13px;
+    margin-bottom: var(--spacing-20);
+  }
+
+  .input-group {
+    margin-bottom: var(--spacing-16);
+  }
+
+  .input-group label {
+    display: block;
+    font-size: var(--text-caption);
+    color: var(--color-storm-cloud);
+    margin-bottom: var(--spacing-8);
+  }
+
+  .input-linear {
+    width: 100%;
+  }
+
+  .pin-input {
+    letter-spacing: 0.3em;
+    font-size: 20px;
+    text-align: center;
+  }
+
+  .w-full {
+    width: 100%;
+    margin-bottom: var(--spacing-8);
+  }
+
+  .error-msg {
+    color: var(--color-warning-red);
+    font-size: var(--text-caption);
+    margin-top: var(--spacing-8);
+    text-align: center;
+  }
+
+  .hidden {
+    display: none !important;
+  }
+</style>
