@@ -1,0 +1,311 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Ödev Yükle">
+	<div class="submit-container">
+		<header class="submit-header">
+			<h1>Ödev Yükleme Portalı</h1>
+			<p>Geliştirdiğiniz dosyaları seçin ve sisteme yükleyin.</p>
+		</header>
+
+		<div class="card card-elevated form-card">
+			<form id="uploadForm" class="upload-form">
+				
+				<div class="input-row">
+					<div class="input-group">
+						<label for="studentId">Öğrenci Numarası</label>
+						<input type="text" id="studentId" name="studentId" class="input-linear font-mono" placeholder="Örn: 234401037" required autocomplete="off" />
+					</div>
+
+					<div class="input-group">
+						<label for="week">Hafta</label>
+						<select id="week" name="week" class="input-linear" required>
+							<option value="" disabled selected>Seçiniz</option>
+							<option value="hafta-1">Hafta 1</option>
+							<option value="hafta-2">Hafta 2</option>
+							<option value="hafta-3">Hafta 3</option>
+							<option value="hafta-4">Hafta 4</option>
+						</select>
+					</div>
+				</div>
+
+				<div class="input-group">
+					<label>Proje Dosyaları (.html, .css, .js)</label>
+					<div class="file-drop-area" id="dropArea">
+						<span class="drop-icon">📄</span>
+						<p class="drop-msg">Dosyaları buraya sürükleyin veya <b>tıklayarak seçin</b></p>
+						<input type="file" id="fileInput" name="files" multiple accept=".html,.css,.js" class="hidden-file-input" required />
+					</div>
+					<div id="fileList" class="file-list"></div>
+				</div>
+
+				<div class="actions">
+					<button type="submit" id="submitBtn" class="btn btn-primary w-full">
+						<span id="btnText">Dosyaları Gönder</span>
+						<span id="loader" class="loader hidden"></span>
+					</button>
+				</div>
+				
+				<div id="statusMessage" class="status-msg hidden"></div>
+			</form>
+		</div>
+	</div>
+</Layout>
+
+<script>
+	document.addEventListener('DOMContentLoaded', () => {
+		const form = document.getElementById('uploadForm') as HTMLFormElement;
+		const dropArea = document.getElementById('dropArea');
+		const fileInput = document.getElementById('fileInput') as HTMLInputElement;
+		const fileList = document.getElementById('fileList');
+		const submitBtn = document.getElementById('submitBtn') as HTMLButtonElement;
+		const btnText = document.getElementById('btnText');
+		const loader = document.getElementById('loader');
+		const statusMessage = document.getElementById('statusMessage');
+
+		// File Selection handling
+		dropArea?.addEventListener('click', () => fileInput?.click());
+
+		dropArea?.addEventListener('dragover', (e) => {
+			e.preventDefault();
+			dropArea.classList.add('dragover');
+		});
+
+		dropArea?.addEventListener('dragleave', () => {
+			dropArea.classList.remove('dragover');
+		});
+
+		dropArea?.addEventListener('drop', (e) => {
+			e.preventDefault();
+			dropArea.classList.remove('dragover');
+			if (e.dataTransfer && e.dataTransfer.files) {
+				fileInput.files = e.dataTransfer.files;
+				updateFileList();
+			}
+		});
+
+		fileInput?.addEventListener('change', updateFileList);
+
+		function updateFileList() {
+			if (!fileList || !fileInput.files) return;
+			fileList.innerHTML = '';
+			Array.from(fileInput.files).forEach(file => {
+				const el = document.createElement('div');
+				el.className = 'file-item font-mono';
+				el.textContent = `+ ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+				fileList.appendChild(el);
+			});
+		}
+
+		// Form Submission
+		form?.addEventListener('submit', async (e) => {
+			e.preventDefault();
+			
+			// UI State: Loading
+			submitBtn.disabled = true;
+			if(btnText) btnText.textContent = 'Yükleniyor...';
+			loader?.classList.remove('hidden');
+			if(statusMessage) {
+				statusMessage.className = 'status-msg hidden';
+				statusMessage.textContent = '';
+			}
+
+			try {
+				const formData = new FormData(form);
+				const response = await fetch('/api/submit-homework', {
+					method: 'POST',
+					body: formData
+				});
+
+				const result = await response.json();
+
+				if (response.ok) {
+					if(statusMessage) {
+						statusMessage.textContent = '✅ ' + result.message;
+						statusMessage.className = 'status-msg success';
+					}
+					form.reset();
+					if(fileList) fileList.innerHTML = '';
+				} else {
+					throw new Error(result.error || 'Yükleme başarısız.');
+				}
+			} catch (error: any) {
+				if(statusMessage) {
+					statusMessage.textContent = '❌ ' + error.message;
+					statusMessage.className = 'status-msg error';
+				}
+			} finally {
+				// UI State: Reset
+				submitBtn.disabled = false;
+				if(btnText) btnText.textContent = 'Dosyaları Gönder';
+				loader?.classList.add('hidden');
+			}
+		});
+	});
+</script>
+
+<style>
+	.submit-container {
+		max-width: 600px;
+		margin: 0 auto;
+		padding-top: var(--spacing-48);
+	}
+
+	.submit-header {
+		margin-bottom: var(--spacing-32);
+	}
+
+	.form-card {
+		padding: var(--spacing-32);
+	}
+
+	.input-row {
+		display: grid;
+		grid-template-columns: 2fr 1fr;
+		gap: var(--spacing-16);
+		margin-bottom: var(--spacing-24);
+	}
+
+	.input-group label {
+		display: block;
+		margin-bottom: var(--spacing-8);
+		font-size: var(--text-caption);
+		color: var(--color-storm-cloud);
+	}
+
+	.input-linear {
+		width: 100%;
+		background: transparent;
+		color: var(--color-porcelain);
+		border: 1px solid var(--color-charcoal-grey);
+		border-radius: var(--radius-inputs);
+		padding: 12px 14px;
+		font-family: var(--font-inter-variable);
+		font-size: var(--text-body);
+		outline: none;
+		transition: border-color var(--transition-fast);
+	}
+
+	.input-linear:focus {
+		border-color: var(--color-light-steel);
+	}
+
+	select.input-linear {
+		appearance: none;
+		background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238a8f98' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+		background-repeat: no-repeat;
+		background-position: right 12px center;
+		background-size: 16px;
+		padding-right: 40px;
+	}
+
+	select.input-linear option {
+		background: var(--color-pitch-black);
+		color: var(--color-porcelain);
+	}
+
+	.file-drop-area {
+		border: 1px dashed var(--color-charcoal-grey);
+		border-radius: var(--radius-inputs);
+		padding: var(--spacing-32) var(--spacing-16);
+		text-align: center;
+		cursor: pointer;
+		background: rgba(255,255,255,0.01);
+		transition: all var(--transition-fast);
+		margin-bottom: var(--spacing-12);
+	}
+
+	.file-drop-area:hover, .file-drop-area.dragover {
+		border-color: var(--color-neon-lime);
+		background: rgba(228, 242, 34, 0.05);
+	}
+
+	.drop-icon {
+		font-size: 32px;
+		margin-bottom: var(--spacing-8);
+		display: inline-block;
+	}
+
+	.drop-msg {
+		color: var(--color-light-steel);
+		font-size: 13px;
+		margin: 0;
+	}
+
+	.drop-msg b {
+		color: var(--color-porcelain);
+	}
+
+	.hidden-file-input {
+		display: none;
+	}
+
+	.file-list {
+		margin-bottom: var(--spacing-24);
+	}
+
+	.file-item {
+		font-size: 12px;
+		color: var(--color-aether-blue);
+		padding: 4px 0;
+	}
+
+	.w-full {
+		width: 100%;
+	}
+
+	.btn {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		gap: 8px;
+		height: 48px;
+	}
+
+	.loader {
+		width: 16px;
+		height: 16px;
+		border: 2px solid var(--color-pitch-black);
+		border-bottom-color: transparent;
+		border-radius: 50%;
+		display: inline-block;
+		box-sizing: border-box;
+		animation: rotation 1s linear infinite;
+	}
+
+	@keyframes rotation {
+		0% { transform: rotate(0deg); }
+		100% { transform: rotate(360deg); }
+	}
+
+	.hidden {
+		display: none !important;
+	}
+
+	.status-msg {
+		margin-top: var(--spacing-16);
+		padding: var(--spacing-12);
+		border-radius: var(--radius-sm);
+		font-size: 13px;
+		text-align: center;
+	}
+
+	.status-msg.success {
+		background: rgba(0, 141, 44, 0.15);
+		color: var(--color-emerald);
+		border: 1px solid rgba(0, 141, 44, 0.3);
+	}
+
+	.status-msg.error {
+		background: rgba(235, 87, 87, 0.1);
+		color: #ff8c8c;
+		border: 1px solid rgba(235, 87, 87, 0.3);
+	}
+
+	@media (max-width: 640px) {
+		.input-row {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>

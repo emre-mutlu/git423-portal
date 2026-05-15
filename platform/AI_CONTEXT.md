@@ -5,7 +5,7 @@ Bu belge, bu projeye sonradan dahil olan veya kodu analiz eden herhangi bir Yapa
 LÜTFEN BU PROJEDE KOD YAZMADAN VEYA YENİ ÖZELLİK EKLENMEDEN ÖNCE BU KURALLARI DİKKATLE OKUYUNUZ.
 
 ## 1. Proje Özeti
-Bu proje, Emre Mutlu tarafından yürütülen **GİT 423 Web Tasarımı** dersi (Görsel İletişim Tasarımı Bölümü) için hazırlanan; ders notlarının (haftalar), duyuruların ve kaynakların yönetildiği, aynı zamanda GitHub Classroom ödev teslimlerini destekleyen ve dinamik not projeksiyonu yapan bir Headless Eğitim Platformudur. İki farklı şubeye hizmet vermektedir.
+Bu proje, Emre Mutlu tarafından yürütülen **GİT 423 Web Tasarımı** dersi (Görsel İletişim Tasarımı Bölümü) için hazırlanan; ders notlarının (haftalar), duyuruların ve kaynakların yönetildiği bir Headless Eğitim Platformudur. Aynı zamanda, öğrencilerin arayüzden doğrudan dosya yüklediği ve arka planda GitHub Pull Request (PR) modelinin otomatik işletildiği gelişmiş bir notlandırma ve ödev teslim sistemine sahiptir. İki farklı şubeye hizmet vermektedir.
 
 ## 2. Teknoloji Yığını (Tech Stack)
 - **Framework:** Astro (Statik Site Oluşturucu - SSG)
@@ -38,7 +38,11 @@ Platform, öğrencilerin sadece ID (Öğrenci Numarası) girerek notlarını sor
 ## 5. Ders Yürütücüsü Özel Kuralları (ÖNEMLİ)
 Aşağıdaki kurallar bizzat ders yürütücüsü Emre Mutlu'nun talepleridir:
 - Veri ihlallerini veya görüntüleme sorunlarını önlemek için, UI üzerinde hiçbir öğrencinin tam adı gösterilmemeli, listeler maskelenmiş olmalıdır (Örn: A*** Y***).
-- Ders materyalleri (weeks) şubelere göre ayrılmaz (Single Source of Truth). Ancak teslim bağlantıları (GitHub Classroom URL'leri) Şube 1 ve Şube 2 için ayrı ayrı şema (Zod) üzerinde tutulur.
+- Ders materyalleri (weeks) şubelere göre ayrılmaz (Single Source of Truth). Ödev teslimleri için de "GitHub Classroom" KULLANILMAZ.
+- **Hibrit Ödev Teslim Mimarisi:** Öğrenciler, GitHub süreçleriyle uğraşmazlar. Platform üzerindeki `/submit` sayfasından dosyalarını yüklerler.
+- **Backend (API) & Registry:** Astro SSR API'si (`submit-homework.ts`), öğrenci numarasını alır ve `src/data/registry.json` (sunucu tarafı) dosyasından öğrencinin ismini ve şubesini bulur.
+- **GitHub Klasör Hiyerarşisi:** Dosyalar, GitHub deponuza şu standartta otomatik push edilir: `Sube-X/Hafta-X/Isim-Soyisim/`. İsimler "Sube-1/Hafta-1/Irem-Meryem-Toprak" gibi yazılımcı standartlarına uygun (tireli/İngilizce karakterli) klasörlenir.
+- **Otomasyon (GitHub Actions):** Sistem tarafından açılan bu PR'lar, GitHub Action robotu tarafından taranır. Robot, klasör yolundaki `Sube-X` ifadesine bakarak `Şube 1` veya `Şube 2` etiketini atar. Zaman kontrolü yapılarak `Zamanında (100)` veya `Geç Teslim (60)` etiketleri de eklenir. Notlar, eğitmen tarafından bu etiketlere bakılarak `students.js` dosyasına işlenir.
 
 ## 6. Geliştirme ve Dağıtım Adımları
 - Sürüm ve test işlemleri yerel ortamda `npm run dev` ile `http://localhost:4321` adresinde test edilmelidir.

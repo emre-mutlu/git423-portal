@@ -14,9 +14,9 @@ const currentPath = pathname.slice(1); // remove the first "/"
       <a href="/announcements" class={currentPath.startsWith("announcements") ? "active" : ""}>Duyurular</a>
       <a href="/resources" class={currentPath.startsWith("resources") ? "active" : ""}>Kaynaklar</a>
     </nav>
-    
     <div class="header-actions">
-      <a href="/grading" class="btn btn-ghost">Not Paneli</a>
+      <a href="/grading" class="nav-link font-mono" style="margin-right: 16px; color: var(--color-storm-cloud); font-size: 13px;">Not Paneli</a>
+      <a href="/submit" class="btn btn-primary" style="padding: 6px 12px; font-size: 13px;">Ödev Yükle</a>
     </div>
   </div>
 </header>
