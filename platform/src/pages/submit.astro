@@ -25,8 +25,6 @@ const hasAssignments = assignments && assignments.length > 0;
 				<p class="no-assign">Şu anda aktif ödev bulunmuyor.</p>
 			) : (
 				<form id="uploadForm" class="upload-form">
-					<input type="hidden" id="studentId" value={student.id} />
-
 					<div class="input-group">
 						<label for="assignmentId">Ödev</label>
 						<select id="assignmentId" name="assignmentId" class="input-linear" required>
@@ -112,7 +110,6 @@ const hasAssignments = assignments && assignments.length > 0;
 		form.addEventListener('submit', async (e) => {
 			e.preventDefault();
 
-			const studentId = (document.getElementById('studentId') as HTMLInputElement).value;
 			const assignmentId = (document.getElementById('assignmentId') as HTMLSelectElement).value;
 			const file = fileInput.files?.[0];
 
@@ -126,7 +123,6 @@ const hasAssignments = assignments && assignments.length > 0;
 
 			try {
 				const formData = new FormData();
-				formData.append('studentId', studentId);
 				formData.append('assignmentId', assignmentId);
 				formData.append('file', file);
 

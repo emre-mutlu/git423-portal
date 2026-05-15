@@ -22,6 +22,11 @@ export const POST: APIRoute = async ({ request }) => {
       return new Response(JSON.stringify({ error: 'Sadece ZIP dosyası kabul edilmektedir.' }), { status: 400 });
     }
 
+    const MAX_SIZE = 50 * 1024 * 1024; // 50 MB
+    if (file.size > MAX_SIZE) {
+      return new Response(JSON.stringify({ error: 'Dosya çok büyük. Maksimum boyut 50 MB.' }), { status: 413 });
+    }
+
     // Deadline kontrolü
     const { data: assignment, error: assignErr } = await supabaseAdmin
       .from('assignments')

@@ -71,7 +71,8 @@ const branches = [...new Set(allStudents?.map(s => s.branch).filter(Boolean))].s
                   {s.pin_hash ? 'Belirlendi' : 'Belirlenmedi'}
                 </span>
               </td>
-              <td>
+              <td class="actions-cell">
+                <a href={`/admin/students/${s.id}`} class="action-btn link-btn">Profil →</a>
                 {s.pin_hash && (
                   <button
                     class="action-btn reset-pin-btn"
@@ -233,7 +234,18 @@ const branches = [...new Set(allStudents?.map(s => s.branch).filter(Boolean))].s
     transition: all 0.12s;
   }
 
-  .action-btn:hover {
+  .link-btn {
+    text-decoration: none;
+    color: var(--color-aether-blue);
+    border-color: transparent;
+  }
+
+  .link-btn:hover {
+    color: var(--color-porcelain);
+    border-color: var(--color-charcoal-grey);
+  }
+
+  .action-btn:not(.link-btn):hover {
     border-color: var(--color-warning-red);
     color: var(--color-warning-red);
   }

@@ -17,7 +17,7 @@ const { data: submissions } = await supabaseAdmin
       id,
       week_number,
       title,
-      deadline_at
+      deadline
     )
   `)
   .eq('student_id', student.id)
@@ -26,7 +26,7 @@ const { data: submissions } = await supabaseAdmin
 // Aktif ödevlerin tümünü çek (teslim edilmemiş olanları göstermek için)
 const { data: allAssignments } = await supabaseAdmin
   .from('assignments')
-  .select('id, week_number, title, deadline_at')
+  .select('id, week_number, title, deadline')
   .eq('is_active', true)
   .order('week_number', { ascending: true });
 
@@ -35,7 +35,7 @@ type AssignmentRow = {
   id: string;
   week_number: number;
   title: string;
-  deadline_at: string;
+  deadline: string;
   status: string;
   score: number | null;
   submitted_at: string | null;
@@ -44,13 +44,13 @@ type AssignmentRow = {
 const rows: AssignmentRow[] = (allAssignments ?? []).map(a => {
   const sub = (submissions ?? []).find(s => (s.assignments as any)?.id === a.id);
   if (!sub) {
-    const deadline = new Date(a.deadline_at);
+    const deadline = new Date(a.deadline);
     const now = new Date();
     return {
       id: a.id,
       week_number: a.week_number,
       title: a.title,
-      deadline_at: a.deadline_at,
+      deadline: a.deadline,
       status: deadline < now ? 'not-submitted' : 'pending',
       score: null,
       submitted_at: null,
@@ -60,7 +60,7 @@ const rows: AssignmentRow[] = (allAssignments ?? []).map(a => {
     id: a.id,
     week_number: a.week_number,
     title: a.title,
-    deadline_at: a.deadline_at,
+    deadline: a.deadline,
     status: sub.status,
     score: sub.score,
     submitted_at: sub.submitted_at,
@@ -98,9 +98,12 @@ function getStatusClass(status: string, isLate: boolean | null = null): string {
           <h2>{student.name_masked}</h2>
           <span class="badge badge-default">{student.branch}</span>
         </div>
-        <form action="/api/auth/logout" method="POST">
-          <button type="submit" class="btn btn-subtle">Çıkış Yap</button>
-        </form>
+        <div class="header-actions">
+          <button id="changePinBtn" class="btn btn-subtle">PIN Değiştir</button>
+          <form action="/api/auth/logout" method="POST">
+            <button type="submit" class="btn btn-subtle">Çıkış Yap</button>
+          </form>
+        </div>
       </div>
 
       <div class="stats-grid">
@@ -156,7 +159,88 @@ function getStatusClass(status: string, isLate: boolean | null = null): string {
       </div>
     </div>
   </div>
+
+  <!-- PIN Değiştir Modal -->
+  <div id="pinModal" class="modal-backdrop hidden">
+    <div class="modal-card card card-elevated">
+      <h3>PIN Değiştir</h3>
+      <div class="input-group">
+        <label for="currentPin">Mevcut PIN</label>
+        <input type="password" id="currentPin" class="input-linear pin-input" maxlength="4" inputmode="numeric" placeholder="••••" />
+      </div>
+      <div class="input-group">
+        <label for="newPin">Yeni PIN</label>
+        <input type="password" id="newPin" class="input-linear pin-input" maxlength="4" inputmode="numeric" placeholder="••••" />
+      </div>
+      <div class="input-group">
+        <label for="confirmNewPin">Yeni PIN Tekrar</label>
+        <input type="password" id="confirmNewPin" class="input-linear pin-input" maxlength="4" inputmode="numeric" placeholder="••••" />
+      </div>
+      <p id="pinModalError" class="error-msg hidden"></p>
+      <div class="modal-actions">
+        <button id="cancelPinBtn" class="btn btn-subtle">İptal</button>
+        <button id="savePinBtn" class="btn btn-primary">Kaydet</button>
+      </div>
+    </div>
+  </div>
 </Layout>
+
+<script>
+  const modal = document.getElementById('pinModal')!;
+  document.getElementById('changePinBtn')!.addEventListener('click', () => {
+    modal.classList.remove('hidden');
+    (document.getElementById('currentPin') as HTMLInputElement).focus();
+  });
+  document.getElementById('cancelPinBtn')!.addEventListener('click', () => {
+    modal.classList.add('hidden');
+    clearPinForm();
+  });
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) { modal.classList.add('hidden'); clearPinForm(); }
+  });
+
+  function clearPinForm() {
+    ['currentPin','newPin','confirmNewPin'].forEach(id => (document.getElementById(id) as HTMLInputElement).value = '');
+    const err = document.getElementById('pinModalError')!;
+    err.classList.add('hidden');
+    err.textContent = '';
+  }
+
+  document.getElementById('savePinBtn')!.addEventListener('click', async () => {
+    const currentPin = (document.getElementById('currentPin') as HTMLInputElement).value;
+    const newPin = (document.getElementById('newPin') as HTMLInputElement).value;
+    const confirmNewPin = (document.getElementById('confirmNewPin') as HTMLInputElement).value;
+    const err = document.getElementById('pinModalError')!;
+
+    err.classList.add('hidden');
+
+    if (newPin !== confirmNewPin) {
+      err.textContent = 'Yeni PIN\'ler eşleşmiyor.';
+      err.classList.remove('hidden');
+      return;
+    }
+    if (!/^\d{4}$/.test(newPin)) {
+      err.textContent = 'PIN 4 haneli rakam olmalıdır.';
+      err.classList.remove('hidden');
+      return;
+    }
+
+    const res = await fetch('/api/auth/change-pin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ currentPin, newPin }),
+    });
+
+    if (res.ok) {
+      modal.classList.add('hidden');
+      clearPinForm();
+    } else {
+      const data = await res.json();
+      err.textContent = data.error || 'Bir hata oluştu.';
+      err.classList.remove('hidden');
+    }
+  });
+</script>
 
 <style>
   .grades-container {
@@ -270,6 +354,80 @@ function getStatusClass(status: string, isLate: boolean | null = null): string {
   .text-right { text-align: right !important; }
   .text-muted { color: var(--color-fog-grey); }
   .text-porcelain { color: var(--color-porcelain); }
+
+  .header-actions {
+    display: flex;
+    gap: var(--spacing-8);
+    align-items: center;
+  }
+
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+  }
+
+  .modal-card {
+    width: 100%;
+    max-width: 340px;
+    padding: var(--spacing-32);
+  }
+
+  .modal-card h3 {
+    font-size: 16px;
+    margin-bottom: var(--spacing-24);
+  }
+
+  .input-group {
+    margin-bottom: var(--spacing-16);
+  }
+
+  .input-group label {
+    display: block;
+    font-size: var(--text-caption);
+    color: var(--color-storm-cloud);
+    margin-bottom: var(--spacing-8);
+  }
+
+  .input-linear {
+    width: 100%;
+    box-sizing: border-box;
+    background: transparent;
+    color: var(--color-porcelain);
+    border: 1px solid var(--color-charcoal-grey);
+    border-radius: var(--radius-inputs);
+    padding: 10px 12px;
+    font-family: var(--font-inter-variable);
+    font-size: var(--text-body);
+    outline: none;
+    transition: border-color 0.12s;
+  }
+
+  .input-linear:focus { border-color: var(--color-light-steel); }
+
+  .pin-input {
+    letter-spacing: 0.3em;
+    font-size: 18px;
+    text-align: center;
+    font-family: var(--font-berkeley-mono);
+  }
+
+  .error-msg {
+    color: var(--color-warning-red);
+    font-size: var(--text-caption);
+    margin-bottom: var(--spacing-12);
+  }
+
+  .modal-actions {
+    display: flex;
+    gap: var(--spacing-8);
+    justify-content: flex-end;
+    margin-top: var(--spacing-8);
+  }
 
   @media (max-width: 640px) {
     .stats-grid { grid-template-columns: 1fr; }

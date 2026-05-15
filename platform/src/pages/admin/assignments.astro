@@ -67,6 +67,13 @@ const { data: assignments } = await supabaseAdmin
                 </td>
                 <td class="actions-cell">
                   <button
+                    class="action-btn auto-grade-btn"
+                    data-id={a.id}
+                    title="Deadline'a göre tüm teslimleri otomatik notlandır"
+                  >
+                    Otomatik Notla
+                  </button>
+                  <button
                     class="action-btn toggle-btn"
                     data-id={a.id}
                     data-active={a.is_active ? 'true' : 'false'}
@@ -97,10 +104,12 @@ const { data: assignments } = await supabaseAdmin
       return;
     }
 
+    // datetime-local is timezone-naive; assume Turkey (UTC+3) and convert to UTC ISO
+    const deadlineUTC = new Date(deadline + ':00+03:00').toISOString();
     const res = await fetch('/api/admin/assignments', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ week_number: parseInt(weekNumber), title, deadline }),
+      body: JSON.stringify({ week_number: parseInt(weekNumber), title, deadline: deadlineUTC }),
     });
 
     if (res.ok) {
@@ -112,6 +121,29 @@ const { data: assignments } = await supabaseAdmin
       statusEl.textContent = '✗ ' + (data.error || 'Hata oluştu.');
       statusEl.className = 'status-msg error';
     }
+  });
+
+  // Otomatik notlandırma
+  document.querySelectorAll('.auto-grade-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const el = btn as HTMLButtonElement;
+      const id = el.dataset.id!;
+      if (!confirm('Bu ödevin tüm teslimleri deadline bilgisine göre otomatik notlandırılacak (zamanında=100, geç=60). Devam?')) return;
+
+      const res = await fetch('/api/admin/assignments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'auto-grade', id }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        alert(`✓ ${data.count} teslim notlandırıldı.`);
+        location.reload();
+      } else {
+        alert('Hata oluştu.');
+      }
+    });
   });
 
   // Toggle active status

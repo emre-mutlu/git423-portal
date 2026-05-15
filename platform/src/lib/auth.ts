@@ -90,7 +90,7 @@ export async function validateSession(cookieHeader: string | null): Promise<{ id
 
 // Admin cookie oluştur
 export function createAdminCookie(): string {
-  return `${ADMIN_COOKIE}=authorized; Path=/admin; HttpOnly; SameSite=Lax; Max-Age=28800`;
+  return `${ADMIN_COOKIE}=authorized; Path=/; HttpOnly; SameSite=Lax; Max-Age=28800`;
 }
 
 // Admin session doğrula

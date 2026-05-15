@@ -2,7 +2,38 @@ import type { APIRoute } from 'astro';
 import { supabaseAdmin } from '../../../lib/supabase';
 
 export const POST: APIRoute = async ({ request }) => {
-  const { week_number, title, deadline } = await request.json();
+  const body = await request.json();
+
+  // Otomatik notlandırma aksiyonu
+  if (body.action === 'auto-grade') {
+    const { id } = body;
+    if (!id) return new Response(JSON.stringify({ error: 'ID gerekli.' }), { status: 400 });
+
+    const { data: submissions } = await supabaseAdmin
+      .from('submissions')
+      .select('id, is_late')
+      .eq('assignment_id', id)
+      .eq('status', 'submitted');
+
+    if (!submissions?.length) {
+      return new Response(JSON.stringify({ ok: true, count: 0 }), { status: 200 });
+    }
+
+    const now = new Date().toISOString();
+    await Promise.all(
+      submissions.map(s =>
+        supabaseAdmin.from('submissions').update({
+          status: 'graded',
+          score: s.is_late ? 60 : 100,
+          graded_at: now,
+        }).eq('id', s.id)
+      )
+    );
+
+    return new Response(JSON.stringify({ ok: true, count: submissions.length }), { status: 200 });
+  }
+
+  const { week_number, title, deadline } = body;
 
   if (!week_number || !title || !deadline) {
     return new Response(JSON.stringify({ error: 'Eksik alan.' }), { status: 400 });

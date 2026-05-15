@@ -66,14 +66,25 @@ const { data: assignments } = await supabaseAdmin
     </div>
   </form>
 
+  <!-- Toplu işlem araç çubuğu -->
+  {submissions && submissions.length > 0 && (
+    <div class="bulk-bar">
+      <span id="selectedCount" class="text-muted">0 seçili</span>
+      <button id="bulkOnTime" class="btn btn-subtle btn-sm" disabled>Zamanında Onayla (100)</button>
+      <button id="bulkLate" class="btn btn-subtle btn-sm" disabled>Geç Onayla (60)</button>
+      <a id="csvExport" href="#" class="btn btn-subtle btn-sm">CSV İndir</a>
+    </div>
+  )}
+
   <!-- Teslim listesi -->
   <div class="card card-elevated table-card">
     {!submissions?.length ? (
       <p class="empty">Sonuç bulunamadı.</p>
     ) : (
-      <table class="data-table">
+      <table class="data-table" id="submissionsTable">
         <thead>
           <tr>
+            <th><input type="checkbox" id="selectAll" /></th>
             <th>Öğrenci No</th>
             <th>Ad (Maskeli)</th>
             <th>Şube</th>
@@ -90,7 +101,8 @@ const { data: assignments } = await supabaseAdmin
             const assignment = s.assignments as any;
             const date = new Date(s.submitted_at);
             return (
-              <tr>
+              <tr data-id={s.id} data-late={s.is_late ? 'true' : 'false'} data-student={student?.student_number} data-assignment={assignment ? `H${assignment.week_number} — ${assignment.title}` : ''} data-date={date.toLocaleDateString('tr-TR')} data-status={s.status} data-score={s.score ?? ''}>
+                <td><input type="checkbox" class="row-check" data-id={s.id} /></td>
                 <td class="font-mono">{student?.student_number}</td>
                 <td>{student?.name_masked}</td>
                 <td class="text-muted">{student?.branch}</td>
@@ -240,4 +252,97 @@ const { data: assignments } = await supabaseAdmin
     font-size: 13px;
     margin: 0;
   }
+
+  .bulk-bar {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-8);
+    margin-bottom: var(--spacing-12);
+    padding: var(--spacing-8) var(--spacing-12);
+    background: var(--color-deep-slate);
+    border: 1px solid var(--color-charcoal-grey);
+    border-radius: var(--radius-cards);
+  }
+
+  .bulk-bar .text-muted { flex: 1; font-size: 13px; }
+
+  .btn-sm { font-size: 12px; padding: 6px 12px; }
+
+  input[type="checkbox"] {
+    accent-color: var(--color-aether-blue);
+    width: 14px;
+    height: 14px;
+    cursor: pointer;
+  }
 </style>
+
+<script>
+  const checkboxes = document.querySelectorAll<HTMLInputElement>('.row-check');
+  const selectAll = document.getElementById('selectAll') as HTMLInputElement | null;
+  const selectedCount = document.getElementById('selectedCount');
+  const bulkOnTime = document.getElementById('bulkOnTime') as HTMLButtonElement | null;
+  const bulkLate = document.getElementById('bulkLate') as HTMLButtonElement | null;
+  const csvExport = document.getElementById('csvExport') as HTMLAnchorElement | null;
+
+  function getSelected(): string[] {
+    return [...document.querySelectorAll<HTMLInputElement>('.row-check:checked')].map(c => c.dataset.id!);
+  }
+
+  function updateBulkBar() {
+    const ids = getSelected();
+    if (selectedCount) selectedCount.textContent = `${ids.length} seçili`;
+    if (bulkOnTime) bulkOnTime.disabled = ids.length === 0;
+    if (bulkLate) bulkLate.disabled = ids.length === 0;
+  }
+
+  selectAll?.addEventListener('change', () => {
+    checkboxes.forEach(c => { c.checked = selectAll.checked; });
+    updateBulkBar();
+  });
+
+  checkboxes.forEach(c => c.addEventListener('change', () => {
+    if (selectAll) selectAll.checked = [...checkboxes].every(c => c.checked);
+    updateBulkBar();
+  }));
+
+  async function bulkGrade(isLate: boolean) {
+    const ids = getSelected();
+    if (!ids.length) return;
+    const score = isLate ? 60 : 100;
+    const label = isLate ? 'geç' : 'zamanında';
+    if (!confirm(`${ids.length} teslimi "${label}" olarak notlandır (${score} puan)?`)) return;
+
+    await Promise.all(ids.map(id =>
+      fetch(`/api/admin/submissions/${id}/grade`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'graded', score }),
+      })
+    ));
+    location.reload();
+  }
+
+  bulkOnTime?.addEventListener('click', () => bulkGrade(false));
+  bulkLate?.addEventListener('click', () => bulkGrade(true));
+
+  // CSV Export
+  csvExport?.addEventListener('click', (e) => {
+    e.preventDefault();
+    const rows = document.querySelectorAll<HTMLTableRowElement>('#submissionsTable tbody tr');
+    const lines = ['Öğrenci No,Hafta,Teslim Tarihi,Durum,Puan'];
+    rows.forEach(row => {
+      const student = row.dataset.student ?? '';
+      const assignment = row.dataset.assignment ?? '';
+      const date = row.dataset.date ?? '';
+      const status = row.dataset.status === 'graded' ? 'Notlandı' : 'Bekliyor';
+      const score = row.dataset.score ?? '';
+      lines.push(`"${student}","${assignment}","${date}","${status}","${score}"`);
+    });
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'teslimler.csv';
+    a.click();
+  });
+</script>

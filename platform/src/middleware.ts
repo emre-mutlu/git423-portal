@@ -2,7 +2,7 @@ import { defineMiddleware } from 'astro:middleware';
 import { validateSession, validateAdminSession } from './lib/auth';
 
 const STUDENT_PROTECTED = ['/grades', '/submit'];
-const ADMIN_PROTECTED = ['/admin'];
+const ADMIN_PROTECTED = ['/admin', '/api/admin'];
 
 export const onRequest = defineMiddleware(async (context, next) => {
   const { pathname } = context.url;
@@ -10,7 +10,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   // Admin rotaları
   if (ADMIN_PROTECTED.some(p => pathname.startsWith(p))) {
-    if (pathname === '/admin/login') return next();
+    if (pathname === '/admin/login' || pathname === '/api/admin/login') return next();
     if (!validateAdminSession(cookies)) {
       return context.redirect('/admin/login');
     }
