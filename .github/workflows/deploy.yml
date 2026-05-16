@@ -20,11 +20,15 @@ jobs:
         working-directory: platform
         run: npm ci
 
-      - name: Deploy to Netlify
+      - name: Build
         working-directory: platform
         env:
           PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
           PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
-        run: npx netlify deploy --prod --site ${{ secrets.NETLIFY_SITE_ID }} --auth ${{ secrets.NETLIFY_AUTH_TOKEN }} --debug
+        run: npm run build
+
+      - name: Deploy to Netlify
+        working-directory: platform
+        run: npx netlify deploy --prod --site ${{ secrets.NETLIFY_SITE_ID }} --auth ${{ secrets.NETLIFY_AUTH_TOKEN }} --dir=dist --functions=.netlify/v1/functions
