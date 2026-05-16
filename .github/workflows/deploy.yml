@@ -27,6 +27,16 @@ jobs:
           PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
         run: npm run build
 
+      - name: Inject KV namespace ID into wrangler.json
+        working-directory: platform
+        env:
+          KV_SESSION_ID: ${{ secrets.CLOUDFLARE_KV_SESSION_ID }}
+        run: |
+          jq --arg id "$KV_SESSION_ID" \
+            '.kv_namespaces[0].id = $id | .previews.kv_namespaces[0].id = $id' \
+            dist/server/wrangler.json > dist/server/wrangler.json.tmp
+          mv dist/server/wrangler.json.tmp dist/server/wrangler.json
+
       - name: Deploy to Cloudflare Workers
         working-directory: platform
         run: npx wrangler deploy --name git423-portal
