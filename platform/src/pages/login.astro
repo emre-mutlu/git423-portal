@@ -1,6 +1,6 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import { validateSession } from '../lib/auth';
+import Layout from '@/layouts/Layout.astro';
+import { validateSession } from '@/lib/auth';
 
 // Zaten giriş yapmışsa grades'e yönlendir
 const cookies = Astro.request.headers.get('cookie');
@@ -10,53 +10,77 @@ if (student) return Astro.redirect('/grades');
 
 <Layout title="Giriş">
   <div class="login-container">
-    <div class="login-header">
-      <h1>GİT 423</h1>
-      <p>Öğrenci numaranızla sisteme giriş yapın.</p>
-    </div>
+    <aside class="login-aside">
+      <p class="aside-eyebrow">— Erişim</p>
+      <h1 class="aside-title">Devam<br/>etmek<br/>için<br/><span class="aside-emph">giriş.</span></h1>
+      <p class="aside-foot">
+        <span class="aside-foot-label">Sorun yaşıyorsanız</span>
+        <span class="aside-foot-value">Eğitmen ile iletişime geçin.</span>
+      </p>
+    </aside>
 
-    <!-- Adım 1: Öğrenci numarası -->
-    <div class="card card-elevated form-card" id="stepNumber">
-      <h2>Giriş</h2>
-      <div class="input-group">
-        <label for="studentNumber">Öğrenci Numarası</label>
-        <input type="text" id="studentNumber" class="input-linear font-mono"
-          placeholder="Örn: 234401037" autocomplete="off" inputmode="numeric" />
+    <div class="login-stage">
+      <div class="login-rail">
+        <span class="rail-num">001</span>
+        <span class="rail-line"></span>
+        <span class="rail-num rail-num-muted">002</span>
       </div>
-      <button id="btnCheckNumber" class="btn btn-primary w-full">Devam Et</button>
-      <p id="errorNumber" class="error-msg hidden">Bu numaraya ait kayıt bulunamadı.</p>
-    </div>
 
-    <!-- Adım 2a: PIN girişi -->
-    <div class="card card-elevated form-card hidden" id="stepPin">
-      <h2>PIN Girin</h2>
-      <p class="step-desc">Öğrenci numaranız: <span id="displayNumber" class="font-mono"></span></p>
-      <div class="input-group">
-        <label for="pinInput">4 Haneli PIN</label>
-        <input type="password" id="pinInput" class="input-linear font-mono pin-input"
-          placeholder="••••" maxlength="4" inputmode="numeric" autocomplete="current-password" />
+      <!-- Adım 1: Öğrenci numarası -->
+      <div class="form-block" id="stepNumber">
+        <p class="form-step-label">Adım 01 / Numara</p>
+        <h2 class="form-heading">Öğrenci numaranız nedir?</h2>
+        <div class="input-group">
+          <label for="studentNumber">Numara</label>
+          <input type="text" id="studentNumber" class="input-linear font-mono"
+            placeholder="234401037" autocomplete="off" inputmode="numeric" autofocus />
+        </div>
+        <button id="btnCheckNumber" class="btn btn-primary w-full">
+          <span id="btnCheckText">Devam Et</span>
+          <span class="btn-arrow-icon">→</span>
+        </button>
+        <p id="errorNumber" class="error-msg hidden">Bu numaraya ait kayıt bulunamadı.</p>
       </div>
-      <button id="btnLogin" class="btn btn-primary w-full">Giriş Yap</button>
-      <button id="btnBackFromPin" class="btn btn-subtle w-full">← Geri</button>
-      <p id="errorPin" class="error-msg hidden">PIN hatalı. Tekrar deneyin.</p>
-    </div>
 
-    <!-- Adım 2b: İlk PIN belirleme -->
-    <div class="card card-elevated form-card hidden" id="stepSetPin">
-      <h2>PIN Belirleyin</h2>
-      <p class="step-desc">İlk girişiniz. Sisteme erişmek için 4 haneli bir PIN belirleyin.</p>
-      <div class="input-group">
-        <label for="newPin">Yeni PIN</label>
-        <input type="password" id="newPin" class="input-linear font-mono pin-input"
-          placeholder="••••" maxlength="4" inputmode="numeric" autocomplete="new-password" />
+      <!-- Adım 2a: PIN girişi -->
+      <div class="form-block hidden" id="stepPin">
+        <p class="form-step-label">Adım 02 / PIN</p>
+        <h2 class="form-heading">4 haneli PIN'inizi girin</h2>
+        <p class="form-meta">Numara: <span id="displayNumber" class="font-mono"></span></p>
+        <div class="input-group">
+          <label for="pinInput">PIN</label>
+          <input type="password" id="pinInput" class="input-linear font-mono pin-input"
+            placeholder="••••" maxlength="4" inputmode="numeric" autocomplete="current-password" />
+        </div>
+        <button id="btnLogin" class="btn btn-primary w-full">
+          Giriş Yap
+          <span class="btn-arrow-icon">→</span>
+        </button>
+        <button id="btnBackFromPin" class="btn btn-subtle btn-back">← Geri dön</button>
+        <p id="errorPin" class="error-msg hidden">PIN hatalı. Tekrar deneyin.</p>
       </div>
-      <div class="input-group">
-        <label for="confirmPin">PIN Tekrar</label>
-        <input type="password" id="confirmPin" class="input-linear font-mono pin-input"
-          placeholder="••••" maxlength="4" inputmode="numeric" autocomplete="new-password" />
+
+      <!-- Adım 2b: İlk PIN belirleme -->
+      <div class="form-block hidden" id="stepSetPin">
+        <p class="form-step-label">Adım 02 / İlk Giriş</p>
+        <h2 class="form-heading">Bir PIN belirleyin</h2>
+        <p class="form-meta">İlk girişiniz. Sonraki giriş için kullanacağınız 4 haneli kodu belirleyin.</p>
+        <div class="input-group">
+          <label for="newPin">Yeni PIN</label>
+          <input type="password" id="newPin" class="input-linear font-mono pin-input"
+            placeholder="••••" maxlength="4" inputmode="numeric" autocomplete="new-password" />
+        </div>
+        <div class="input-group">
+          <label for="confirmPin">PIN tekrar</label>
+          <input type="password" id="confirmPin" class="input-linear font-mono pin-input"
+            placeholder="••••" maxlength="4" inputmode="numeric" autocomplete="new-password" />
+        </div>
+        <button id="btnSetPin" class="btn btn-primary w-full">
+          PIN Belirle ve Devam Et
+          <span class="btn-arrow-icon">→</span>
+        </button>
+        <p id="errorSetPin" class="error-msg hidden">PIN'ler eşleşmiyor veya geçersiz.</p>
       </div>
-      <button id="btnSetPin" class="btn btn-primary w-full">PIN Belirle ve Giriş Yap</button>
-      <p id="errorSetPin" class="error-msg hidden">PIN'ler eşleşmiyor veya geçersiz.</p>
     </div>
   </div>
 </Layout>
@@ -85,11 +109,16 @@ if (student) return Astro.redirect('/grades');
   }
 
   // Adım 1: Numara kontrolü
-  document.getElementById('btnCheckNumber')!.addEventListener('click', async () => {
+  const btnCheckNumber = document.getElementById('btnCheckNumber') as HTMLButtonElement;
+  const btnCheckText = document.getElementById('btnCheckText')!;
+
+  btnCheckNumber.addEventListener('click', async () => {
     const number = studentNumberInput.value.trim();
     if (!number) return;
 
     errorNumber.classList.add('hidden');
+    btnCheckNumber.disabled = true;
+    btnCheckText.textContent = 'Kontrol ediliyor...';
 
     const res = await fetch('/api/auth/check-number', {
       method: 'POST',
@@ -97,6 +126,9 @@ if (student) return Astro.redirect('/grades');
       body: JSON.stringify({ studentNumber: number })
     });
     const data = await res.json();
+
+    btnCheckNumber.disabled = false;
+    btnCheckText.textContent = 'Devam Et';
 
     if (!res.ok || !data.found) {
       errorNumber.classList.remove('hidden');
@@ -184,76 +216,181 @@ if (student) return Astro.redirect('/grades');
 
 <style>
   .login-container {
-    max-width: 400px;
-    margin: 0 auto;
-    padding-top: var(--spacing-96, 80px);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-64);
+    align-items: start;
+    padding-top: var(--spacing-48);
+    min-height: calc(100vh - 200px);
   }
 
-  .login-header {
-    margin-bottom: var(--spacing-40);
-    text-align: center;
+  /* === ASIDE === */
+  .login-aside {
+    padding-top: var(--spacing-32);
+    border-right: 1px solid var(--color-charcoal-grey);
+    padding-right: var(--spacing-48);
+    position: sticky;
+    top: 100px;
   }
 
-  .login-header h1 {
-    font-size: 32px;
-    margin-bottom: var(--spacing-8);
-  }
-
-  .login-header p {
-    color: var(--color-storm-cloud);
-    font-size: var(--text-body);
-    margin: 0;
-  }
-
-  .form-card {
-    padding: var(--spacing-32);
-  }
-
-  .form-card h2 {
-    font-size: 18px;
+  .aside-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-neon-lime);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
     margin-bottom: var(--spacing-24);
   }
 
-  .step-desc {
+  .aside-title {
+    font-size: clamp(48px, 7vw, 80px);
+    font-weight: 500;
+    line-height: 0.95;
+    letter-spacing: -0.04em;
+    color: var(--color-porcelain);
+    margin: 0 0 var(--spacing-48);
+  }
+
+  .aside-emph {
+    font-weight: 300;
+    font-style: italic;
+    color: var(--color-neon-lime);
+  }
+
+  .aside-foot {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-family: var(--font-sans);
+    margin: 0;
+    padding-top: var(--spacing-24);
+    border-top: 1px solid var(--color-charcoal-grey);
+  }
+
+  .aside-foot-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
     color: var(--color-storm-cloud);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+
+  .aside-foot-value {
     font-size: 13px;
-    margin-bottom: var(--spacing-20);
+    color: var(--color-light-steel);
   }
 
-  .input-group {
-    margin-bottom: var(--spacing-16);
+  /* === STAGE === */
+  .login-stage {
+    position: relative;
+    padding: var(--spacing-32) 0;
+    max-width: 440px;
   }
 
-  .input-group label {
-    display: block;
-    font-size: var(--text-caption);
+  .login-rail {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-12);
+    margin-bottom: var(--spacing-32);
+  }
+
+  .rail-num {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--color-neon-lime);
+    letter-spacing: 0.05em;
+  }
+
+  .rail-num-muted {
+    color: var(--color-fog-grey);
+  }
+
+  .rail-line {
+    flex: 1;
+    height: 1px;
+    background: var(--color-charcoal-grey);
+  }
+
+  .form-block {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-20);
+  }
+
+  .form-step-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
     color: var(--color-storm-cloud);
-    margin-bottom: var(--spacing-8);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin: 0;
   }
 
-  .input-linear {
-    width: 100%;
+  .form-heading {
+    font-size: 28px;
+    font-weight: 500;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    color: var(--color-porcelain);
+    margin: 0;
+  }
+
+  .form-meta {
+    font-size: 13px;
+    color: var(--color-storm-cloud);
+    margin: 0;
+  }
+
+  .form-meta .font-mono {
+    color: var(--color-porcelain);
+  }
+
+  .btn-arrow-icon {
+    font-family: var(--font-mono);
+    transition: transform 0.2s ease;
+  }
+
+  .btn-primary:hover .btn-arrow-icon {
+    transform: translateX(4px);
+  }
+
+  .btn-back {
+    align-self: flex-start;
+    padding: 4px 0;
   }
 
   .pin-input {
-    letter-spacing: 0.3em;
-    font-size: 20px;
-    text-align: center;
+    font-size: 22px;
+    text-align: left;
+    letter-spacing: 0.4em;
   }
 
   .w-full {
     width: 100%;
-    margin-bottom: var(--spacing-8);
+    margin-top: var(--spacing-4);
   }
 
   .error-msg {
-    color: var(--color-warning-red);
-    font-size: var(--text-caption);
-    margin-top: var(--spacing-8);
-    text-align: center;
+    margin-top: 0;
+    text-align: left;
   }
 
-  .hidden {
-    display: none !important;
+  @media (max-width: 880px) {
+    .login-container {
+      grid-template-columns: 1fr;
+      gap: var(--spacing-32);
+    }
+    .login-aside {
+      border-right: none;
+      padding-right: 0;
+      padding-bottom: var(--spacing-32);
+      border-bottom: 1px solid var(--color-charcoal-grey);
+      position: relative;
+      top: 0;
+    }
+    .aside-title {
+      margin-bottom: var(--spacing-24);
+    }
   }
 </style>

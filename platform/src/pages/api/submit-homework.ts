@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
-import { validateSession } from '../../lib/auth';
-import { supabaseAdmin } from '../../lib/supabase';
+import { validateSession } from '@/lib/auth';
+import { supabaseAdmin } from '@/lib/supabase';
+import { SUBMISSION_STATUS, STORAGE_BUCKET, MAX_UPLOAD_SIZE } from '@/lib/constants';
 
 export const POST: APIRoute = async ({ request }) => {
   const cookies = request.headers.get('cookie');
@@ -22,8 +23,7 @@ export const POST: APIRoute = async ({ request }) => {
       return new Response(JSON.stringify({ error: 'Sadece ZIP dosyası kabul edilmektedir.' }), { status: 400 });
     }
 
-    const MAX_SIZE = 50 * 1024 * 1024; // 50 MB
-    if (file.size > MAX_SIZE) {
+    if (file.size > MAX_UPLOAD_SIZE) {
       return new Response(JSON.stringify({ error: 'Dosya çok büyük. Maksimum boyut 50 MB.' }), { status: 413 });
     }
 
@@ -47,7 +47,7 @@ export const POST: APIRoute = async ({ request }) => {
     const buffer = await file.arrayBuffer();
 
     const { error: uploadError } = await supabaseAdmin.storage
-      .from('submissions')
+      .from(STORAGE_BUCKET)
       .upload(storagePath, buffer, {
         contentType: 'application/zip',
         upsert: true
@@ -67,7 +67,7 @@ export const POST: APIRoute = async ({ request }) => {
         file_path: storagePath,
         submitted_at: now.toISOString(),
         is_late: isLate,
-        status: 'submitted'
+        status: SUBMISSION_STATUS.SUBMITTED
       }, {
         onConflict: 'student_id,assignment_id'
       });

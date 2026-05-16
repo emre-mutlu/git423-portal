@@ -1,19 +1,19 @@
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 :root {
-  /* Colors */
-  --color-pitch-black: #08090a;
-  --color-graphite: #0f1011;
-  --color-deep-slate: #161718;
-  --color-charcoal-grey: #23252a;
-  --color-muted-ash: #323334;
-  --color-gunmetal: #383b3f;
-  --color-porcelain: #f7f8f8;
-  --color-light-steel: #d0d6e0;
-  --color-storm-cloud: #8a8f98;
-  --color-fog-grey: #62666d;
+  /* Renk paleti — derin ve disiplinli */
+  --color-pitch-black: #0a0a0b;
+  --color-graphite: #111113;
+  --color-deep-slate: #16161a;
+  --color-charcoal-grey: #1f1f24;
+  --color-muted-ash: #2a2a30;
+  --color-gunmetal: #38383f;
+  --color-porcelain: #fafafa;
+  --color-light-steel: #c8cad0;
+  --color-storm-cloud: #828289;
+  --color-fog-grey: #54545a;
   --color-alabaster: #e5e5e6;
-  --color-neon-lime: #e4f222;
+  --color-neon-lime: #d4ff00;
   --color-aether-blue: #5e6ad2;
   --color-forest-green: #008d2c;
   --color-cyan-spark: #02b8cc;
@@ -23,8 +23,11 @@
   --color-amethyst: #8b5cf6;
 
   /* Typography — Font Families */
-  --font-inter-variable: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-berkeley-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-sans: 'Geist', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  /* Eski isimler — geriye dönük uyumluluk için */
+  --font-inter-variable: var(--font-sans);
+  --font-berkeley-mono: var(--font-mono);
 
   /* Typography — Scale */
   --text-caption: 10px;
@@ -105,15 +108,35 @@
 html, body {
   background-color: var(--surface-canvas);
   color: var(--color-porcelain);
-  font-family: var(--font-inter-variable);
+  font-family: var(--font-sans);
   font-weight: var(--font-weight-regular);
   font-size: var(--text-body);
   line-height: var(--leading-body);
   letter-spacing: var(--tracking-body);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: 'ss01', 'cv11';
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+}
+
+/* Selection */
+::selection {
+  background: var(--color-neon-lime);
+  color: var(--color-pitch-black);
+}
+
+/* Focus ring — global */
+:focus-visible {
+  outline: 2px solid var(--color-neon-lime);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+button:focus-visible,
+a:focus-visible {
+  outline-offset: 3px;
 }
 
 main {
@@ -137,30 +160,32 @@ a:hover {
   color: var(--color-light-steel);
 }
 
-/* Typography Hierarchy */
+/* Tipografi Hiyerarşisi — editorial weight */
 h1, h2, h3, h4, h5, h6 {
-  font-weight: var(--font-weight-w590);
+  font-weight: 600;
   color: var(--color-porcelain);
+  letter-spacing: -0.03em;
+  line-height: 1.05;
 }
 
 h1 {
-  font-size: var(--text-display);
-  line-height: var(--leading-display);
-  letter-spacing: var(--tracking-display);
+  font-size: clamp(48px, 8vw, 96px);
+  font-weight: 500;
+  letter-spacing: -0.04em;
   margin-bottom: var(--spacing-24);
 }
 
 h2 {
-  font-size: var(--text-heading-lg);
-  line-height: var(--leading-heading-lg);
-  letter-spacing: var(--tracking-heading-lg);
+  font-size: clamp(32px, 4vw, 44px);
+  font-weight: 500;
+  letter-spacing: -0.03em;
   margin-bottom: var(--spacing-16);
 }
 
 h3 {
-  font-size: var(--text-heading);
-  line-height: var(--leading-heading);
-  letter-spacing: var(--tracking-heading);
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
   margin-bottom: var(--spacing-12);
 }
 
@@ -169,80 +194,165 @@ p {
   margin-bottom: var(--spacing-8);
 }
 
-/* Linear Cards */
+/* Kartlar — editorial border yaklaşımı */
 .card {
   background: var(--surface-card);
   border-radius: var(--radius-cards);
-  padding: var(--card-padding);
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--surface-overlay);
+  padding: var(--spacing-16);
+  border: 1px solid var(--color-charcoal-grey);
+  transition: border-color var(--transition-fast), background var(--transition-fast);
 }
 
 .card-elevated {
   background: var(--surface-elevated);
-  border-radius: var(--radius-xl); /* 12px top */
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
-  box-shadow: var(--shadow-subtle);
-  padding: 24px 0;
+  border-radius: var(--radius-cards);
+  border: 1px solid var(--color-charcoal-grey);
+  padding: var(--spacing-32);
 }
 
-/* Linear Buttons */
+/* Tıklanabilir kart — hover'da köşe işaretleri belirir */
+.card-interactive {
+  position: relative;
+  overflow: hidden;
+}
+
+.card-interactive::before,
+.card-interactive::after {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border: 1px solid var(--color-neon-lime);
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: none;
+}
+
+.card-interactive::before {
+  top: 8px;
+  left: 8px;
+  border-right: none;
+  border-bottom: none;
+  transform: translate(-4px, -4px);
+}
+
+.card-interactive::after {
+  bottom: 8px;
+  right: 8px;
+  border-left: none;
+  border-top: none;
+  transform: translate(4px, 4px);
+}
+
+.card-interactive:hover {
+  border-color: var(--color-muted-ash);
+}
+
+.card-interactive:hover::before,
+.card-interactive:hover::after {
+  opacity: 1;
+  transform: translate(0, 0);
+}
+
+/* Butonlar */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-inter-variable);
-  font-size: var(--text-body);
-  font-weight: var(--font-weight-w590);
+  gap: var(--spacing-8);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: all 0.15s ease;
   text-decoration: none;
   border-radius: var(--radius-buttons);
+  letter-spacing: -0.01em;
+  position: relative;
 }
 
-/* Primary Action Button - Neon Lime */
+/* Primary — neon lime block */
 .btn-primary {
   background: var(--color-neon-lime);
   color: var(--color-pitch-black);
-  padding: 12px 24px;
+  padding: 12px 22px;
   border: none;
-  box-shadow: var(--shadow-sm);
+  font-weight: 600;
 }
 
 .btn-primary:hover {
-  filter: brightness(1.1);
+  background: #e3ff33;
   color: var(--color-pitch-black);
+  transform: translateY(-1px);
 }
 
-/* Ghost Navigation Button */
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+/* Secondary — bordered */
+.btn-secondary {
+  background: transparent;
+  color: var(--color-porcelain);
+  padding: 11px 21px;
+  border: 1px solid var(--color-muted-ash);
+}
+
+.btn-secondary:hover {
+  border-color: var(--color-neon-lime);
+  color: var(--color-neon-lime);
+}
+
+/* Ghost — text only with subtle bg on hover */
 .btn-ghost {
   background: transparent;
   color: var(--color-porcelain);
   border: none;
-  border-radius: 0;
+  border-radius: var(--radius-buttons);
   padding: var(--spacing-4) var(--spacing-8);
-  font-weight: var(--font-weight-regular);
+  font-weight: 400;
 }
 
 .btn-ghost:hover {
   background: rgba(255, 255, 255, 0.05);
-  border-radius: var(--radius-sm);
   color: var(--color-porcelain);
 }
 
-/* Subtle Link Button */
+/* Subtle — minimal text link */
 .btn-subtle {
   background: transparent;
-  color: var(--color-light-steel);
+  color: var(--color-storm-cloud);
   border: none;
-  border-radius: var(--radius-buttons);
-  padding: 0 6px;
-  font-weight: var(--font-weight-regular);
+  padding: 8px 12px;
+  font-weight: 500;
+  font-size: 13px;
 }
 
 .btn-subtle:hover {
   color: var(--color-porcelain);
+}
+
+/* Arrow accent for navigation links */
+.btn-arrow {
+  background: transparent;
+  color: var(--color-porcelain);
+  padding: 12px 0;
+  border: none;
+  font-weight: 500;
+}
+
+.btn-arrow::after {
+  content: '→';
+  font-family: var(--font-mono);
+  transition: transform 0.2s ease;
+}
+
+.btn-arrow:hover {
+  color: var(--color-neon-lime);
+}
+
+.btn-arrow:hover::after {
+  transform: translateX(4px);
 }
 
 /* Input Fields */
@@ -252,19 +362,474 @@ p {
   border: 1px solid var(--color-charcoal-grey);
   border-radius: var(--radius-inputs);
   padding: 12px 14px;
-  font-family: var(--font-inter-variable);
-  font-size: var(--text-body);
+  font-family: var(--font-sans);
+  font-size: 14px;
   outline: none;
-  box-shadow: var(--shadow-subtle-2);
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  transition: border-color 0.15s ease, background 0.15s ease;
 }
 
 .input-linear:focus {
   border-color: var(--color-light-steel);
-  box-shadow: var(--shadow-md);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.input-linear::placeholder {
+  color: var(--color-fog-grey);
 }
 
 /* Monospace text */
 .font-mono {
+  font-family: var(--font-mono);
+}
+
+/* ========== Editorial sayfa sistemi ========== */
+
+/* Sayfa başlığı bloğu — eyebrow + display heading + dek */
+.page-header {
+  margin-bottom: var(--spacing-48);
+  padding-top: var(--spacing-16);
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-storm-cloud);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: var(--spacing-20);
+}
+
+.eyebrow::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: var(--color-neon-lime);
+}
+
+/* Eski "kicker" — aynı görüntü için alias */
+.kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-storm-cloud);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: var(--spacing-20);
+}
+
+.kicker::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: var(--color-neon-lime);
+}
+
+.page-title {
+  font-size: clamp(40px, 6vw, 72px);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  margin-bottom: var(--spacing-20);
+}
+
+.page-subtitle {
+  color: var(--color-storm-cloud);
+  font-size: 16px;
+  line-height: 1.5;
+  max-width: 60ch;
+  margin: 0;
+}
+
+/* Bölüm başlığı — sayı + isim + yatay çizgi */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-16);
+  margin-bottom: var(--spacing-24);
+  padding-bottom: var(--spacing-12);
+  border-bottom: 1px solid var(--color-charcoal-grey);
+}
+
+.section-label {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--spacing-12);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-porcelain);
+  letter-spacing: 0;
+  text-transform: none;
+  margin: 0;
+}
+
+.section-label::before {
+  content: attr(data-num);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--color-neon-lime);
+  letter-spacing: 0.05em;
+}
+
+.section-meta {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--color-fog-grey);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* İstatistik kartı — büyük rakamlar, editorial */
+.stat-card {
+  padding: var(--spacing-24);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-12);
+  position: relative;
+}
+
+.stat-card .stat-label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--color-storm-cloud);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.stat-card .stat-value {
+  font-family: var(--font-sans);
+  font-size: 40px;
+  font-weight: 500;
+  color: var(--color-porcelain);
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.stat-card.highlight {
+  border-color: var(--color-muted-ash);
+}
+
+.stat-card.highlight .stat-value {
+  color: var(--color-neon-lime);
+}
+
+/* Sayfa numarası — sağ üst editorial işaret */
+.page-meta {
+  position: absolute;
+  top: var(--spacing-24);
+  right: var(--spacing-32);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--color-fog-grey);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  pointer-events: none;
+}
+
+/* Pull-quote / hero supplementary text */
+.dek {
+  font-size: 18px;
+  line-height: 1.5;
+  color: var(--color-storm-cloud);
+  max-width: 56ch;
+}
+
+/* Editorial rakam etiketi — H01, II vb */
+.numeral {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-neon-lime);
+  letter-spacing: 0.05em;
+}
+
+/* ========== Shared utility classes (admin + öğrenci sayfaları) ========== */
+
+/* Text utilities */
+.text-muted { color: var(--color-storm-cloud); }
+.text-right { text-align: right; }
+.text-porcelain { color: var(--color-porcelain); }
+.text-warning { color: var(--color-warning-red); }
+
+/* Hidden helper */
+.hidden { display: none !important; }
+
+/* Width helper */
+.w-full { width: 100%; }
+
+/* Button sizes */
+.btn-sm {
+  font-size: 12px;
+  padding: 6px 12px;
+}
+
+/* Form inputs (overrides for admin tight layout) */
+.input-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: var(--spacing-16);
+}
+
+.input-group label {
+  font-size: 11px;
+  color: var(--color-storm-cloud);
+  margin-bottom: 6px;
+}
+
+/* Compact input variant for admin tables/filters */
+.input-compact {
+  background: transparent;
+  color: var(--color-porcelain);
+  border: 1px solid var(--color-charcoal-grey);
+  border-radius: var(--radius-inputs);
+  padding: 8px 10px;
+  font-family: var(--font-inter-variable);
+  font-size: 13px;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.12s;
+}
+
+.input-compact:focus { border-color: var(--color-light-steel); }
+
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.6);
+}
+
+/* Data tables — editorial */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.data-table th,
+.data-table td {
+  padding: var(--spacing-16) var(--spacing-20);
+  text-align: left;
+  border-bottom: 1px solid var(--color-charcoal-grey);
+  vertical-align: middle;
+}
+
+.data-table tr:last-child td {
+  border-bottom: none;
+}
+
+.data-table tbody tr {
+  transition: background 0.15s ease;
+}
+
+.data-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.data-table th {
+  color: var(--color-storm-cloud);
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  padding-top: var(--spacing-12);
+  padding-bottom: var(--spacing-12);
+  background: transparent;
+  border-bottom: 1px solid var(--color-charcoal-grey);
+}
+
+.table-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Badges — minimal, durum noktası ile */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border-radius: 2px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border: 1px solid transparent;
+}
+
+.badge::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.7;
+}
+
+.badge-default {
+  background: transparent;
+  color: var(--color-storm-cloud);
+  border-color: var(--color-charcoal-grey);
+}
+
+.badge-success {
+  background: rgba(212, 255, 0, 0.08);
+  color: var(--color-neon-lime);
+  border-color: rgba(212, 255, 0, 0.25);
+}
+
+.badge-warning {
+  background: rgba(235, 87, 87, 0.08);
+  color: var(--color-warning-red);
+  border-color: rgba(235, 87, 87, 0.25);
+}
+
+.badge-danger {
+  background: rgba(235, 87, 87, 0.15);
+  color: #ff8c8c;
+  border-color: rgba(235, 87, 87, 0.4);
+}
+
+.badge-neutral {
+  background: transparent;
+  color: var(--color-fog-grey);
+  border-color: var(--color-charcoal-grey);
+}
+
+/* Late tag — küçük inline işaret */
+.late-tag {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 9px;
+  color: var(--color-warning-red);
+  border: 1px solid rgba(235, 87, 87, 0.4);
+  padding: 1px 5px;
+  border-radius: 2px;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* Empty state — minimal */
+.empty {
+  padding: var(--spacing-48);
+  text-align: center;
+  color: var(--color-storm-cloud);
+  font-size: 13px;
+  margin: 0;
+}
+
+.empty::before {
+  content: '∅';
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 24px;
+  color: var(--color-fog-grey);
+  margin-bottom: var(--spacing-12);
+}
+
+/* Action buttons in admin tables */
+.action-btn {
+  background: none;
+  border: 1px solid var(--color-charcoal-grey);
+  color: var(--color-storm-cloud);
+  padding: 4px 10px;
+  border-radius: var(--radius-inputs);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.12s;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.action-btn:hover {
+  border-color: var(--color-light-steel);
+  color: var(--color-porcelain);
+}
+
+/* Inline text link in tables */
+.link-action {
+  font-size: 12px;
+  color: var(--color-aether-blue);
+  text-decoration: none;
+}
+
+.link-action:hover { color: var(--color-porcelain); }
+
+/* Status messages (success/error) */
+.status-msg {
+  font-size: 13px;
+  padding: var(--spacing-8) var(--spacing-12);
+  border-radius: 4px;
+}
+
+.status-msg.success {
+  color: var(--color-emerald);
+  background: rgba(0, 141, 44, 0.1);
+}
+
+.status-msg.error {
+  color: #ff8c8c;
+  background: rgba(235, 87, 87, 0.1);
+}
+
+/* Error message line */
+.error-msg {
+  color: var(--color-warning-red);
+  font-size: var(--text-caption);
+  margin-top: var(--spacing-8);
+}
+
+/* PIN input (centered, spaced) */
+.pin-input {
+  letter-spacing: 0.3em;
+  font-size: 18px;
+  text-align: center;
   font-family: var(--font-berkeley-mono);
+}
+
+/* Modal backdrop */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+.modal-card {
+  width: 100%;
+  max-width: 340px;
+  padding: var(--spacing-32);
+}
+
+.modal-actions {
+  display: flex;
+  gap: var(--spacing-8);
+  justify-content: flex-end;
+  margin-top: var(--spacing-8);
+}
+
+/* Checkbox accent */
+input[type="checkbox"] {
+  accent-color: var(--color-aether-blue);
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
 }

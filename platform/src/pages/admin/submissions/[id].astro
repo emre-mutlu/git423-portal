@@ -1,6 +1,6 @@
 ---
-import AdminLayout from '../../../layouts/AdminLayout.astro';
-import { supabaseAdmin } from '../../../lib/supabase';
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import { supabaseAdmin } from '@/lib/supabase';
 
 const { id } = Astro.params;
 
@@ -333,10 +333,7 @@ const submittedAt = new Date(submission.submitted_at);
     text-align: center;
   }
 
-  .btn-sm {
-    padding: 7px 14px;
-    font-size: 13px;
-  }
+  .btn-sm { padding: 7px 14px; }
 
   .grade-status {
     font-size: 12px;
@@ -346,7 +343,6 @@ const submittedAt = new Date(submission.submitted_at);
 
   .grade-status.success { color: #27a644; background: rgba(0, 141, 44, 0.12); }
   .grade-status.error { color: #ff8c8c; background: rgba(235, 87, 87, 0.12); }
-  .hidden { display: none !important; }
 
   .no-file {
     padding: var(--spacing-32);

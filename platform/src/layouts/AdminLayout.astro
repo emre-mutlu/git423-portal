@@ -7,6 +7,13 @@ interface Props {
 
 const { title } = Astro.props;
 const { pathname } = Astro.url;
+
+const navItems = [
+  { num: '01', href: '/admin', label: 'Dashboard', match: (p: string) => p === '/admin' },
+  { num: '02', href: '/admin/assignments', label: 'Ödevler', match: (p: string) => p.startsWith('/admin/assignments') },
+  { num: '03', href: '/admin/submissions', label: 'Teslimler', match: (p: string) => p.startsWith('/admin/submissions') },
+  { num: '04', href: '/admin/students', label: 'Öğrenciler', match: (p: string) => p.startsWith('/admin/students') },
+];
 ---
 
 <!doctype html>
@@ -15,21 +22,25 @@ const { pathname } = Astro.url;
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>{title} | GİT 423 Admin</title>
+    <title>{title} | GİT423 Admin</title>
   </head>
   <body>
     <div class="admin-shell">
       <nav class="admin-nav">
         <a href="/admin" class="admin-logo">
-          GİT 423 <span class="admin-tag">Admin</span>
+          <span class="logo-mark">◆</span>
+          <span class="logo-text">GİT423</span>
+          <span class="admin-tag">Admin</span>
         </a>
         <div class="nav-links">
-          <a href="/admin" class:list={['nav-link', { active: pathname === '/admin' }]}>Dashboard</a>
-          <a href="/admin/assignments" class:list={['nav-link', { active: pathname.startsWith('/admin/assignments') }]}>Ödevler</a>
-          <a href="/admin/submissions" class:list={['nav-link', { active: pathname.startsWith('/admin/submissions') }]}>Teslimler</a>
-          <a href="/admin/students" class:list={['nav-link', { active: pathname.startsWith('/admin/students') }]}>Öğrenciler</a>
+          {navItems.map(item => (
+            <a href={item.href} class:list={['nav-link', { active: item.match(pathname) }]}>
+              <span class="nav-num">{item.num}</span>
+              <span class="nav-label">{item.label}</span>
+            </a>
+          ))}
         </div>
-        <form action="/api/admin/logout" method="POST">
+        <form action="/api/admin/logout" method="POST" class="admin-logout">
           <button type="submit" class="btn btn-subtle logout-btn">Çıkış</button>
         </form>
       </nav>
@@ -50,74 +61,136 @@ const { pathname } = Astro.url;
   .admin-nav {
     display: flex;
     align-items: center;
-    gap: var(--spacing-24);
+    gap: var(--spacing-32);
     padding: 0 var(--spacing-32);
-    height: 56px;
+    height: 60px;
     border-bottom: 1px solid var(--color-charcoal-grey);
-    background: var(--color-graphite);
+    background: rgba(10, 10, 11, 0.72);
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
     position: sticky;
     top: 0;
     z-index: 100;
   }
 
   .admin-logo {
-    font-family: var(--font-berkeley-mono);
-    font-size: 13px;
-    color: var(--color-porcelain);
-    text-decoration: none;
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--spacing-8);
+    text-decoration: none;
     flex-shrink: 0;
-    letter-spacing: 0.02em;
+    transition: opacity 0.15s ease;
+  }
+
+  .admin-logo:hover {
+    opacity: 0.7;
+  }
+
+  .logo-mark {
+    color: var(--color-neon-lime);
+    font-size: 12px;
+    line-height: 1;
+  }
+
+  .logo-text {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-porcelain);
+    letter-spacing: 0.08em;
   }
 
   .admin-tag {
-    font-size: 10px;
+    font-family: var(--font-mono);
+    font-size: 9px;
     background: var(--color-neon-lime);
     color: var(--color-pitch-black);
     padding: 2px 6px;
     border-radius: 2px;
     font-weight: 700;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
   }
 
   .nav-links {
     display: flex;
-    gap: var(--spacing-4);
+    gap: var(--spacing-20);
     flex: 1;
+    margin-left: var(--spacing-16);
   }
 
   .nav-link {
-    font-size: 13px;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
     color: var(--color-storm-cloud);
     text-decoration: none;
-    padding: 6px 10px;
-    border-radius: var(--radius-inputs);
-    transition: color 0.12s, background 0.12s;
+    font-size: 13px;
+    font-weight: 400;
+    transition: color 0.15s ease;
+    padding: 4px 0;
+    position: relative;
+  }
+
+  .nav-num {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--color-fog-grey);
+    letter-spacing: 0.05em;
   }
 
   .nav-link:hover {
     color: var(--color-porcelain);
-    background: rgba(255, 255, 255, 0.04);
   }
 
   .nav-link.active {
     color: var(--color-porcelain);
-    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .nav-link.active .nav-num {
+    color: var(--color-neon-lime);
+  }
+
+  .nav-link.active::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -20px;
+    height: 1px;
+    background: var(--color-neon-lime);
   }
 
   .logout-btn {
-    font-size: 13px;
+    font-size: 12px;
     padding: 6px 12px;
   }
 
   .admin-main {
     flex: 1;
-    padding: var(--spacing-32);
+    padding: var(--spacing-48) var(--spacing-32) var(--spacing-64);
     max-width: 1200px;
     width: 100%;
     margin: 0 auto;
     box-sizing: border-box;
+  }
+
+  @media (max-width: 900px) {
+    .nav-links {
+      gap: var(--spacing-12);
+    }
+    .nav-label {
+      display: none;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .admin-nav {
+      padding: 0 var(--spacing-16);
+      gap: var(--spacing-12);
+    }
+    .admin-main {
+      padding: var(--spacing-24) var(--spacing-16);
+    }
   }
 </style>

@@ -1,6 +1,6 @@
 ---
-import AdminLayout from '../../layouts/AdminLayout.astro';
-import { supabaseAdmin } from '../../lib/supabase';
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import { supabaseAdmin } from '@/lib/supabase';
 
 const [
   { count: studentCount },
@@ -38,24 +38,26 @@ const { data: recentSubmissions } = await supabaseAdmin
 
 <AdminLayout title="Dashboard">
   <div class="page-header">
-    <h1>Dashboard</h1>
+    <p class="kicker">Admin · Genel Bakış</p>
+    <h1 class="page-title">Komuta<br/><span class="title-em">merkezi.</span></h1>
+    <p class="page-subtitle">Platformun mevcut durumu, son aktiviteler ve hızlı erişim.</p>
   </div>
 
   <div class="stats-grid">
-    {stats.map(s => (
-      <div class="stat-card card card-elevated">
+    {stats.map((s, i) => (
+      <div class={`stat-card card ${i === 3 ? 'highlight' : ''}`}>
         <span class="stat-label">{s.label}</span>
-        <span class="stat-value font-mono">{s.value}</span>
+        <span class="stat-value">{s.value}</span>
       </div>
     ))}
   </div>
 
   <div class="section">
     <div class="section-header">
-      <h2>Son Teslimler</h2>
-      <a href="/admin/submissions" class="btn btn-subtle btn-sm">Tümünü Gör →</a>
+      <h2 class="section-label" data-num="01">Son Teslimler</h2>
+      <a href="/admin/submissions" class="btn btn-arrow">Tümünü Gör</a>
     </div>
-    <div class="card card-elevated table-card">
+    <div class="card table-card">
       {!recentSubmissions?.length ? (
         <p class="empty">Henüz teslim yok.</p>
       ) : (
@@ -63,6 +65,7 @@ const { data: recentSubmissions } = await supabaseAdmin
           <thead>
             <tr>
               <th>Öğrenci</th>
+              <th>No</th>
               <th>Ödev</th>
               <th>Teslim Tarihi</th>
               <th>Durum</th>
@@ -76,7 +79,8 @@ const { data: recentSubmissions } = await supabaseAdmin
               const date = new Date(s.submitted_at);
               return (
                 <tr>
-                  <td class="font-mono">{student?.student_number}</td>
+                  <td>{student?.name_masked ?? '—'}</td>
+                  <td class="font-mono text-muted">{student?.student_number}</td>
                   <td>{assignment ? `H${assignment.week_number} — ${assignment.title}` : '—'}</td>
                   <td class="text-muted">{date.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</td>
                   <td>
@@ -94,154 +98,173 @@ const { data: recentSubmissions } = await supabaseAdmin
     </div>
   </div>
 
+  <div class="section-header" style="margin-top: var(--spacing-48);">
+    <h2 class="section-label" data-num="02">Hızlı Erişim</h2>
+  </div>
+
   <div class="quick-links">
-    <a href="/admin/assignments" class="quick-card card card-elevated">
-      <span class="qc-icon">📋</span>
-      <span class="qc-label">Ödev Ekle</span>
+    <a href="/admin/assignments" class="quick-card card card-interactive">
+      <span class="qc-num">01</span>
+      <svg class="qc-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="4" y="3" width="16" height="18" rx="2"/>
+        <path d="M8 8h8M8 12h8M8 16h5"/>
+      </svg>
+      <div class="qc-body">
+        <span class="qc-label">Ödev Ekle</span>
+        <span class="qc-desc">Yeni hafta görevi oluştur</span>
+      </div>
+      <span class="qc-arrow font-mono">→</span>
     </a>
-    <a href="/admin/submissions" class="quick-card card card-elevated">
-      <span class="qc-icon">📦</span>
-      <span class="qc-label">Teslim İncele</span>
+    <a href="/admin/submissions" class="quick-card card card-interactive">
+      <span class="qc-num">02</span>
+      <svg class="qc-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 8v13H3V8M1 3h22v5H1zM10 12h4"/>
+      </svg>
+      <div class="qc-body">
+        <span class="qc-label">Teslim İncele</span>
+        <span class="qc-desc">Kod incele ve notlandır</span>
+      </div>
+      <span class="qc-arrow font-mono">→</span>
     </a>
-    <a href="/admin/students" class="quick-card card card-elevated">
-      <span class="qc-icon">👤</span>
-      <span class="qc-label">Öğrenciler</span>
+    <a href="/admin/students" class="quick-card card card-interactive">
+      <span class="qc-num">03</span>
+      <svg class="qc-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+        <circle cx="9" cy="7" r="4"/>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+      </svg>
+      <div class="qc-body">
+        <span class="qc-label">Öğrenciler</span>
+        <span class="qc-desc">Kayıtları yönet</span>
+      </div>
+      <span class="qc-arrow font-mono">→</span>
     </a>
   </div>
 </AdminLayout>
 
 <style>
-  .page-header {
-    margin-bottom: var(--spacing-32);
-  }
-
-  .page-header h1 {
-    font-size: 24px;
-    color: var(--color-porcelain);
+  .title-em {
+    font-weight: 300;
+    font-style: italic;
+    color: var(--color-neon-lime);
   }
 
   .stats-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: var(--spacing-16);
-    margin-bottom: var(--spacing-32);
-  }
-
-  .stat-card {
-    padding: var(--spacing-20) var(--spacing-24);
-  }
-
-  .stat-label {
-    display: block;
-    font-size: var(--text-caption);
-    color: var(--color-storm-cloud);
-    margin-bottom: var(--spacing-8);
-  }
-
-  .stat-value {
-    font-size: 28px;
-    color: var(--color-porcelain);
-  }
-
-  .section {
-    margin-bottom: var(--spacing-32);
-  }
-
-  .section-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: var(--spacing-12);
-  }
-
-  .section-header h2 {
-    font-size: 15px;
-    color: var(--color-porcelain);
-  }
-
-  .table-card {
-    padding: 0;
+    gap: 0;
+    margin-bottom: var(--spacing-48);
+    border: 1px solid var(--color-charcoal-grey);
+    border-radius: var(--radius-cards);
     overflow: hidden;
   }
 
-  .data-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
+  .stats-grid .stat-card {
+    border: none;
+    border-right: 1px solid var(--color-charcoal-grey);
+    border-radius: 0;
+    background: var(--surface-card);
   }
 
-  .data-table th,
-  .data-table td {
-    padding: var(--spacing-12) var(--spacing-16);
-    text-align: left;
-    border-bottom: 1px solid var(--color-charcoal-grey);
+  .stats-grid .stat-card:last-child {
+    border-right: none;
   }
 
-  .data-table tr:last-child td {
-    border-bottom: none;
-  }
-
-  .data-table th {
-    color: var(--color-fog-grey);
-    font-weight: 400;
-    font-size: 11px;
-    background: rgba(255, 255, 255, 0.02);
-  }
-
-  .badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 2px 6px;
-    border-radius: 2px;
-    font-size: 11px;
-    font-weight: 500;
-  }
-
-  .badge-success { background: rgba(0, 141, 44, 0.15); color: #27a644; border: 1px solid rgba(0, 141, 44, 0.3); }
-  .badge-neutral { background: var(--color-charcoal-grey); color: var(--color-fog-grey); }
-
-  .text-muted { color: var(--color-storm-cloud); }
-  .link-action { font-size: 12px; color: var(--color-aether-blue); text-decoration: none; }
-  .link-action:hover { color: var(--color-porcelain); }
-
-  .empty {
-    padding: var(--spacing-24);
-    text-align: center;
-    color: var(--color-storm-cloud);
-    font-size: 13px;
-    margin: 0;
-  }
-
-  .btn-sm {
-    font-size: 12px;
-    padding: 4px 10px;
+  .section {
+    margin-bottom: var(--spacing-48);
   }
 
   .quick-links {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: var(--spacing-16);
-    margin-top: var(--spacing-32);
+    gap: var(--spacing-12);
   }
 
   .quick-card {
-    display: flex;
+    display: grid;
+    grid-template-columns: auto auto 1fr auto;
     align-items: center;
-    gap: var(--spacing-12);
+    gap: var(--spacing-16);
     padding: var(--spacing-20) var(--spacing-24);
     text-decoration: none;
-    transition: background 0.12s;
+    background: var(--surface-card);
   }
 
-  .quick-card:hover {
-    background: rgba(255, 255, 255, 0.04);
+  .qc-num {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--color-fog-grey);
+    letter-spacing: 0.05em;
   }
 
-  .qc-icon { font-size: 20px; }
-  .qc-label { font-size: 13px; color: var(--color-light-steel); }
+  .quick-card:hover .qc-num {
+    color: var(--color-neon-lime);
+  }
+
+  .qc-icon {
+    color: var(--color-storm-cloud);
+    flex-shrink: 0;
+    transition: color 0.15s ease;
+  }
+
+  .quick-card:hover .qc-icon {
+    color: var(--color-porcelain);
+  }
+
+  .qc-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .qc-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-porcelain);
+    letter-spacing: -0.01em;
+    transition: color 0.15s ease;
+  }
+
+  .quick-card:hover .qc-label {
+    color: var(--color-neon-lime);
+  }
+
+  .qc-desc {
+    font-size: 11px;
+    color: var(--color-storm-cloud);
+  }
+
+  .qc-arrow {
+    font-size: 14px;
+    color: var(--color-fog-grey);
+    transition: transform 0.2s ease, color 0.15s ease;
+  }
+
+  .quick-card:hover .qc-arrow {
+    color: var(--color-neon-lime);
+    transform: translateX(4px);
+  }
 
   @media (max-width: 768px) {
     .stats-grid { grid-template-columns: repeat(2, 1fr); }
     .quick-links { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 1024px) {
+    .stats-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .stats-grid .stat-card {
+      border-right: 1px solid var(--color-charcoal-grey);
+      border-bottom: 1px solid var(--color-charcoal-grey);
+    }
+    .stats-grid .stat-card:nth-child(2n) {
+      border-right: none;
+    }
+    .stats-grid .stat-card:nth-last-child(-n+2) {
+      border-bottom: none;
+    }
   }
 </style>

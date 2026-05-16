@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { setPin, createSessionCookie } from '../../../lib/auth';
+import { setPin, createSessionCookie } from '@/lib/auth';
 
 export const POST: APIRoute = async ({ request }) => {
   const { studentId, pin } = await request.json();

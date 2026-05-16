@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { supabaseAdmin } from '../../../../../lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase';
 
 export const PATCH: APIRoute = async ({ request, params }) => {
   const { id } = params;

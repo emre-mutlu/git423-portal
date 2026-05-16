@@ -1,214 +1,391 @@
 ---
-import Layout from '../layouts/Layout.astro';
+import Layout from '@/layouts/Layout.astro';
+
+const today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase();
+
+const weeks = [
+  { num: '01', title: 'Oryantasyon ve Vizyon', desc: 'Dersin işleyişi, çalışma ekosistemi ve web dünyasına genel bir bakış.', status: 'live', href: '/weeks/hafta-1' },
+  { num: '02', title: 'Semantic HTML', desc: 'İnternetin çalışma mantığı ve anlamsal iskelet inşası.', status: 'soon' },
+  { num: '03', title: 'CSS Temelleri', desc: 'Görsel öğelerin kullanımı, sayfa içi/dışı bağlantılar ve stil.', status: 'soon' },
+];
 ---
 
 <Layout title="Ana Sayfa">
-	<!-- Hero Section: Full bleed pitch black, focused -->
-	<section class="hero">
-		<div class="hero-content">
-			<div class="badge-wrapper">
-				<span class="badge">Sürüm 2.0</span>
-			</div>
-			<h1>Görsel İletişim,<br/>Kodla Şekilleniyor.</h1>
-			<p class="hero-desc">
-				HTML, CSS ve modern web teknolojileriyle tasarımın sınırlarını aşın. GİT 423 ders platformuna hoş geldiniz.
-			</p>
-			<div class="hero-actions">
-				<a href="#haftalar" class="btn btn-primary">Ders Programını İncele</a>
-				<a href="/announcements" class="btn btn-subtle">Duyurular &rarr;</a>
-			</div>
-		</div>
-	</section>
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-meta">
+      <span class="hero-meta-item">GİT423</span>
+      <span class="hero-meta-sep">/</span>
+      <span class="hero-meta-item">WEB TASARIMI</span>
+      <span class="hero-meta-sep">/</span>
+      <span class="hero-meta-item">2026 BAHAR</span>
+    </div>
 
-	<section id="haftalar" class="weeks-section">
-		<div class="section-header">
-			<h2>Ders Programı</h2>
-			<p>Haftalık müfredat ve materyaller</p>
-		</div>
-		
-		<div class="weeks-grid">
-			<a href="/weeks/hafta-1" class="card week-card">
-				<div class="week-header">
-					<span class="week-num font-mono">Hafta 01</span>
-					<span class="status-indicator live">Yayında</span>
-				</div>
-				<h3>Oryantasyon ve Vizyon</h3>
-				<p>Dersin işleyişi, çalışma ekosistemi ve web dünyasına genel bir bakış.</p>
-			</a>
+    <h1 class="hero-title">
+      Görsel<br/>
+      <span class="hero-italic">iletişim,</span><br/>
+      kodla<br/>
+      <span class="hero-lime">şekilleniyor.</span>
+    </h1>
 
-			<div class="card week-card locked">
-				<div class="week-header">
-					<span class="week-num font-mono">Hafta 02</span>
-					<span class="status-indicator">Yakında</span>
-				</div>
-				<h3>Semantic HTML</h3>
-				<p>İnternetin çalışma mantığı ve anlamsal iskelet inşası.</p>
-			</div>
-			
-			<div class="card week-card locked">
-				<div class="week-header">
-					<span class="week-num font-mono">Hafta 03</span>
-					<span class="status-indicator">Yakında</span>
-				</div>
-				<h3>CSS Temelleri</h3>
-				<p>Görsel öğelerin kullanımı, sayfa içi/dışı bağlantılar ve stil.</p>
-			</div>
-		</div>
-	</section>
+    <div class="hero-foot">
+      <p class="dek">
+        HTML, CSS ve modern web teknolojileriyle tasarımın sınırlarını aşın. Tasarımcının elinden kodun yapısına; konsept, mimari ve detay arasında.
+      </p>
+      <div class="hero-actions">
+        <a href="#program" class="btn btn-primary">Ders Programı</a>
+        <a href="/announcements" class="btn btn-arrow">Duyurular</a>
+      </div>
+    </div>
+
+    <div class="hero-corners" aria-hidden="true">
+      <span class="corner top-left">◤</span>
+      <span class="corner top-right">{today}</span>
+      <span class="corner bottom-left">[v2.0]</span>
+      <span class="corner bottom-right">↓ kaydır</span>
+    </div>
+  </section>
+
+  <!-- Ders Programı -->
+  <section id="program" class="weeks-section">
+    <div class="section-header">
+      <h2 class="section-label" data-num="01">Ders Programı</h2>
+      <span class="section-meta">14 hafta · haftalık materyal</span>
+    </div>
+
+    <div class="weeks-list">
+      {weeks.map((w) => {
+        const isLive = w.status === 'live';
+        const Tag = isLive ? 'a' : 'div';
+        return (
+          <Tag
+            class:list={['week-row', { 'is-locked': !isLive, 'card-interactive': isLive }]}
+            href={isLive ? w.href : undefined}
+          >
+            <span class="week-num font-mono">H{w.num}</span>
+            <div class="week-body">
+              <h3 class="week-title">{w.title}</h3>
+              <p class="week-desc">{w.desc}</p>
+            </div>
+            <span class="week-status">
+              {isLive ? (
+                <><span class="dot"></span>Yayında</>
+              ) : (
+                <><span class="dot dot-muted"></span>Yakında</>
+              )}
+            </span>
+            {isLive && <span class="week-arrow font-mono">→</span>}
+          </Tag>
+        );
+      })}
+    </div>
+  </section>
+
+  <!-- Yan kolofon — bilgi bandı -->
+  <section class="colophon">
+    <div class="colophon-grid">
+      <div class="colophon-cell">
+        <span class="cell-label">Dil</span>
+        <span class="cell-value">Türkçe</span>
+      </div>
+      <div class="colophon-cell">
+        <span class="cell-label">Format</span>
+        <span class="cell-value">Yüz Yüze + Dijital</span>
+      </div>
+      <div class="colophon-cell">
+        <span class="cell-label">Kredi</span>
+        <span class="cell-value">3 AKTS</span>
+      </div>
+      <div class="colophon-cell">
+        <span class="cell-label">Yürütücü</span>
+        <span class="cell-value">Emre Mutlu</span>
+      </div>
+    </div>
+  </section>
 </Layout>
 
 <style>
-	/* Hero Section */
-	.hero {
-		padding: var(--spacing-96) 0 var(--spacing-64);
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-	}
+  /* === HERO === */
+  .hero {
+    position: relative;
+    padding: var(--spacing-48) 0 var(--spacing-64);
+    min-height: calc(100vh - 120px);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
 
-	.hero-content {
-		max-width: 680px;
-	}
+  .hero-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-12);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--color-storm-cloud);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: var(--spacing-48);
+  }
 
-	.badge-wrapper {
-		margin-bottom: var(--spacing-24);
-	}
+  .hero-meta-sep {
+    color: var(--color-charcoal-grey);
+  }
 
-	.badge {
-		background: var(--color-charcoal-grey);
-		color: var(--color-porcelain);
-		padding: var(--spacing-4) var(--spacing-8);
-		border-radius: var(--radius-tags);
-		font-size: var(--text-caption);
-		font-weight: var(--font-weight-w510);
-		letter-spacing: 0.05em;
-		text-transform: uppercase;
-		border: 1px solid var(--color-muted-ash);
-	}
+  .hero-title {
+    font-size: clamp(64px, 12vw, 168px);
+    font-weight: 500;
+    line-height: 0.92;
+    letter-spacing: -0.055em;
+    margin: 0;
+    color: var(--color-porcelain);
+  }
 
-	.hero h1 {
-		color: var(--color-porcelain);
-	}
+  .hero-italic {
+    font-weight: 300;
+    font-style: italic;
+    color: var(--color-light-steel);
+  }
 
-	.hero-desc {
-		color: var(--color-storm-cloud);
-		font-size: var(--text-heading);
-		line-height: var(--leading-heading);
-		margin-bottom: var(--spacing-32);
-		font-weight: var(--font-weight-regular);
-		letter-spacing: var(--tracking-heading);
-	}
+  .hero-lime {
+    color: var(--color-neon-lime);
+    font-weight: 600;
+  }
 
-	.hero-actions {
-		display: flex;
-		gap: var(--spacing-16);
-		align-items: center;
-	}
+  .hero-foot {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: var(--spacing-32);
+    align-items: end;
+    margin-top: var(--spacing-48);
+    padding-top: var(--spacing-32);
+    border-top: 1px solid var(--color-charcoal-grey);
+  }
 
-	/* Weeks Section */
-	.weeks-section {
-		margin-top: var(--spacing-48);
-		padding-top: var(--spacing-48);
-		border-top: 1px solid var(--color-charcoal-grey);
-	}
+  .hero-foot .dek {
+    margin: 0;
+  }
 
-	.section-header {
-		margin-bottom: var(--spacing-32);
-	}
+  .hero-actions {
+    display: flex;
+    gap: var(--spacing-16);
+    justify-content: flex-end;
+    align-items: center;
+  }
 
-	.section-header p {
-		margin-bottom: 0;
-	}
+  .hero-corners {
+    position: absolute;
+    inset: var(--spacing-16) 0;
+    pointer-events: none;
+    display: none;
+  }
 
-	.weeks-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-		gap: var(--spacing-16);
-	}
+  .corner {
+    position: absolute;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--color-fog-grey);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
 
-	.week-card {
-		display: flex;
-		flex-direction: column;
-		text-decoration: none;
-		color: inherit;
-		height: 100%;
-		transition: border-color var(--transition-fast), transform var(--transition-fast);
-	}
+  .corner.top-left { top: 0; left: -16px; color: var(--color-neon-lime); font-size: 14px; }
+  .corner.top-right { top: 0; right: -16px; }
+  .corner.bottom-left { bottom: 0; left: -16px; color: var(--color-neon-lime); }
+  .corner.bottom-right { bottom: 0; right: -16px; animation: bob 2s ease-in-out infinite; }
 
-	.week-card:hover {
-		border-color: var(--color-light-steel);
-		transform: translateY(-2px);
-		box-shadow: var(--shadow-subtle-2);
-	}
+  @keyframes bob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(4px); }
+  }
 
-	.week-card h3 {
-		margin-bottom: var(--spacing-8);
-		font-size: 16px;
-	}
+  @media (min-width: 1200px) {
+    .hero-corners { display: block; }
+  }
 
-	.week-card p {
-		margin-bottom: 0;
-		flex: 1;
-		font-size: 13px;
-	}
+  /* === WEEKS === */
+  .weeks-section {
+    margin-top: var(--spacing-64);
+    padding-bottom: var(--spacing-48);
+  }
 
-	.week-header {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		margin-bottom: var(--spacing-16);
-	}
+  .weeks-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
 
-	.week-num {
-		color: var(--color-light-steel);
-		font-size: var(--text-caption);
-		letter-spacing: 0.05em;
-	}
+  .week-row {
+    display: grid;
+    grid-template-columns: 64px 1fr auto 24px;
+    align-items: center;
+    gap: var(--spacing-24);
+    padding: var(--spacing-24) 0;
+    border-bottom: 1px solid var(--color-charcoal-grey);
+    color: inherit;
+    text-decoration: none;
+    position: relative;
+    transition: padding 0.2s ease;
+  }
 
-	.status-indicator {
-		font-size: 11px;
-		color: var(--color-fog-grey);
-		display: flex;
-		align-items: center;
-		gap: 6px;
-	}
+  .week-row.card-interactive::before,
+  .week-row.card-interactive::after {
+    display: none;
+  }
 
-	.status-indicator::before {
-		content: '';
-		display: block;
-		width: 6px;
-		height: 6px;
-		border-radius: 50%;
-		background: var(--color-fog-grey);
-	}
+  .week-row:first-child {
+    border-top: 1px solid var(--color-charcoal-grey);
+  }
 
-	.status-indicator.live {
-		color: var(--color-neon-lime);
-	}
+  .week-row:hover:not(.is-locked) {
+    padding-left: var(--spacing-12);
+  }
 
-	.status-indicator.live::before {
-		background: var(--color-neon-lime);
-		box-shadow: 0 0 8px rgba(228, 242, 34, 0.4);
-	}
+  .week-row:hover:not(.is-locked) .week-arrow {
+    color: var(--color-neon-lime);
+    transform: translateX(4px);
+  }
 
-	.week-card.locked {
-		opacity: 0.5;
-		pointer-events: none;
-		background: var(--color-pitch-black); /* Less prominent than graphite */
-	}
+  .week-row:hover:not(.is-locked) .week-title {
+    color: var(--color-neon-lime);
+  }
 
-	@media (max-width: 768px) {
-		.hero {
-			padding: var(--spacing-48) 0;
-		}
-		
-		.hero-desc {
-			font-size: 18px;
-		}
+  .week-num {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--color-fog-grey);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
 
-		.hero-actions {
-			flex-direction: column;
-			align-items: stretch;
-		}
-	}
+  .week-body {
+    min-width: 0;
+  }
+
+  .week-title {
+    font-size: 22px;
+    font-weight: 500;
+    margin: 0 0 4px;
+    color: var(--color-porcelain);
+    letter-spacing: -0.02em;
+    transition: color 0.2s ease;
+  }
+
+  .week-desc {
+    margin: 0;
+    color: var(--color-storm-cloud);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .week-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--color-storm-cloud);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .week-status .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--color-neon-lime);
+    box-shadow: 0 0 8px rgba(212, 255, 0, 0.5);
+  }
+
+  .week-status .dot-muted {
+    background: var(--color-fog-grey);
+    box-shadow: none;
+  }
+
+  .week-arrow {
+    font-size: 18px;
+    color: var(--color-fog-grey);
+    transition: all 0.2s ease;
+    text-align: right;
+  }
+
+  .week-row.is-locked {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  .week-row.is-locked .week-arrow {
+    visibility: hidden;
+  }
+
+  /* === COLOPHON === */
+  .colophon {
+    margin-top: var(--spacing-32);
+    padding: var(--spacing-32) 0;
+    border-top: 1px solid var(--color-charcoal-grey);
+    border-bottom: 1px solid var(--color-charcoal-grey);
+  }
+
+  .colophon-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--spacing-32);
+  }
+
+  .colophon-cell {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-8);
+  }
+
+  .cell-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--color-storm-cloud);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+
+  .cell-value {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--color-porcelain);
+    letter-spacing: -0.01em;
+  }
+
+  @media (max-width: 768px) {
+    .hero-title {
+      font-size: clamp(48px, 14vw, 84px);
+    }
+
+    .hero-foot {
+      grid-template-columns: 1fr;
+      gap: var(--spacing-24);
+    }
+
+    .hero-actions {
+      justify-content: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .week-row {
+      grid-template-columns: 48px 1fr auto;
+      gap: var(--spacing-12);
+    }
+
+    .week-arrow {
+      display: none;
+    }
+
+    .week-title {
+      font-size: 18px;
+    }
+
+    .colophon-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--spacing-20);
+    }
+  }
 </style>

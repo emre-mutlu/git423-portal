@@ -1,22 +1,48 @@
 ---
+import { validateSession } from '@/lib/auth';
+
 const pathname = new URL(Astro.request.url).pathname;
-const currentPath = pathname.slice(1); // remove the first "/"
+const currentPath = pathname.slice(1);
+
+const cookies = Astro.request.headers.get('cookie');
+const student = await validateSession(cookies);
+const isAuthed = !!student;
 ---
 
 <header class="header">
   <div class="header-container">
     <a href="/" class="logo">
-      GİT 423
+      <span class="logo-mark">◆</span>
+      <span class="logo-text">GİT423</span>
     </a>
-    
+
     <nav class="nav-links">
-      <a href="/" class={currentPath === "" ? "active" : ""}>Ders Notları</a>
-      <a href="/announcements" class={currentPath.startsWith("announcements") ? "active" : ""}>Duyurular</a>
-      <a href="/resources" class={currentPath.startsWith("resources") ? "active" : ""}>Kaynaklar</a>
+      <a href="/" class={currentPath === "" ? "active" : ""}>
+        <span class="nav-num">01</span>
+        <span class="nav-label">Ders Notları</span>
+      </a>
+      <a href="/announcements" class={currentPath.startsWith("announcements") ? "active" : ""}>
+        <span class="nav-num">02</span>
+        <span class="nav-label">Duyurular</span>
+      </a>
+      <a href="/resources" class={currentPath.startsWith("resources") ? "active" : ""}>
+        <span class="nav-num">03</span>
+        <span class="nav-label">Kaynaklar</span>
+      </a>
     </nav>
+
     <div class="header-actions">
-      <a href="/grades" class="nav-link font-mono" style="margin-right: 16px; color: var(--color-storm-cloud); font-size: 13px;">Not Paneli</a>
-      <a href="/submit" class="btn btn-primary" style="padding: 6px 12px; font-size: 13px;">Ödev Yükle</a>
+      {isAuthed ? (
+        <>
+          <a href="/grades" class={`nav-muted ${currentPath.startsWith("grades") ? "active" : ""}`}>
+            <span class="dot-status"></span>
+            {student?.name_masked ?? 'Hesabım'}
+          </a>
+          <a href="/submit" class="btn btn-primary btn-compact">Ödev Yükle</a>
+        </>
+      ) : (
+        <a href="/login" class="btn btn-primary btn-compact">Giriş Yap</a>
+      )}
     </div>
   </div>
 </header>
@@ -27,8 +53,9 @@ const currentPath = pathname.slice(1); // remove the first "/"
     top: 0;
     z-index: 100;
     width: 100%;
-    background: rgba(8, 9, 10, 0.8);
-    backdrop-filter: blur(8px);
+    background: rgba(10, 10, 11, 0.72);
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
     border-bottom: 1px solid var(--color-charcoal-grey);
   }
 
@@ -39,13 +66,33 @@ const currentPath = pathname.slice(1); // remove the first "/"
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: var(--spacing-32);
   }
 
   .logo {
-    font-size: var(--text-body);
-    font-weight: var(--font-weight-w590);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-8);
+    text-decoration: none;
+    transition: opacity 0.15s ease;
+  }
+
+  .logo:hover {
+    opacity: 0.7;
+  }
+
+  .logo-mark {
+    color: var(--color-neon-lime);
+    font-size: 12px;
+    line-height: 1;
+  }
+
+  .logo-text {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
     color: var(--color-porcelain);
-    letter-spacing: var(--tracking-body);
+    letter-spacing: 0.08em;
   }
 
   .nav-links {
@@ -54,25 +101,77 @@ const currentPath = pathname.slice(1); // remove the first "/"
   }
 
   .nav-links a {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
     color: var(--color-storm-cloud);
-    font-size: 13px; /* Slightly smaller for sidebar/nav items */
-    font-weight: var(--font-weight-regular);
+    font-size: 13px;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    transition: color 0.15s ease;
   }
 
-  .nav-links a:hover, .nav-links a.active {
+  .nav-num {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--color-fog-grey);
+    letter-spacing: 0.05em;
+  }
+
+  .nav-links a:hover,
+  .nav-links a.active {
     color: var(--color-porcelain);
   }
 
-  /* Compact button for header */
-  .header-actions .btn {
-    font-size: 13px;
-    padding: var(--spacing-4) var(--spacing-12);
+  .nav-links a.active .nav-num {
+    color: var(--color-neon-lime);
   }
 
-  @media (max-width: 768px) {
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-16);
+  }
+
+  .nav-muted {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--color-storm-cloud);
+  }
+
+  .nav-muted .dot-status {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--color-neon-lime);
+    box-shadow: 0 0 8px rgba(212, 255, 0, 0.5);
+  }
+
+  .nav-muted:hover,
+  .nav-muted.active {
+    color: var(--color-porcelain);
+  }
+
+  .btn-compact {
+    font-size: 12px !important;
+    padding: 8px 16px !important;
+  }
+
+  @media (max-width: 900px) {
+    .nav-links {
+      display: none;
+    }
+  }
+
+  @media (max-width: 640px) {
     .header-container {
-      flex-direction: column;
-      gap: var(--spacing-12);
+      padding: var(--spacing-12) var(--spacing-16);
+    }
+    .nav-muted {
+      display: none;
     }
   }
 </style>

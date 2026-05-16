@@ -1,24 +1,40 @@
 ---
 const year = new Date().getFullYear();
+const builtAt = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase();
 ---
 
 <footer class="footer">
   <div class="footer-container">
-    <div class="footer-info">
-      <span class="logo">GİT 423 Web Tasarımı</span>
-      <p class="instructor">Emre Mutlu</p>
+    <div class="footer-line">
+      <span class="line-num">§</span>
+      <span class="line-text">Bir tasarımcının kodu, bir kodcunun tasarımı.</span>
     </div>
-    
-    <div class="footer-copyright">
-      &copy; {year} Görsel İletişim Tasarımı
+
+    <div class="footer-grid">
+      <div class="footer-cell">
+        <span class="cell-label">Yürütücü</span>
+        <span class="cell-value">Emre Mutlu</span>
+      </div>
+      <div class="footer-cell">
+        <span class="cell-label">Ders</span>
+        <span class="cell-value">GİT423 · Web Tasarımı</span>
+      </div>
+      <div class="footer-cell">
+        <span class="cell-label">Yapı</span>
+        <span class="cell-value font-mono">v2.0 · {builtAt}</span>
+      </div>
+      <div class="footer-cell">
+        <span class="cell-label">©</span>
+        <span class="cell-value">{year} Görsel İletişim Tasarımı</span>
+      </div>
     </div>
   </div>
 </footer>
 
 <style>
   .footer {
-    margin-top: var(--spacing-64);
-    padding: var(--spacing-24) 0;
+    margin-top: var(--spacing-48);
+    padding: var(--spacing-48) 0 var(--spacing-32);
     border-top: 1px solid var(--color-charcoal-grey);
     background: var(--surface-canvas);
   }
@@ -27,34 +43,68 @@ const year = new Date().getFullYear();
     max-width: var(--page-max-width);
     margin: 0 auto;
     padding: 0 2rem;
+  }
+
+  .footer-line {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    align-items: baseline;
+    gap: var(--spacing-12);
+    font-size: 24px;
+    font-weight: 500;
+    color: var(--color-porcelain);
+    letter-spacing: -0.02em;
+    line-height: 1.3;
+    margin-bottom: var(--spacing-32);
+    max-width: 56ch;
   }
 
-  .logo {
-    font-size: var(--text-body);
-    font-weight: var(--font-weight-w510);
-    color: var(--color-light-steel);
+  .line-num {
+    font-family: var(--font-mono);
+    color: var(--color-neon-lime);
+    font-size: 16px;
+    flex-shrink: 0;
   }
 
-  .instructor {
-    font-size: var(--text-caption);
+  .line-text {
+    color: var(--color-porcelain);
+  }
+
+  .footer-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--spacing-24);
+    padding-top: var(--spacing-24);
+    border-top: 1px solid var(--color-charcoal-grey);
+  }
+
+  .footer-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .cell-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
     color: var(--color-storm-cloud);
-    margin-top: var(--spacing-4);
-    margin-bottom: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
   }
 
-  .footer-copyright {
-    font-size: var(--text-caption);
-    color: var(--color-fog-grey); /* De-emphasized text */
+  .cell-value {
+    font-size: 13px;
+    color: var(--color-porcelain);
+    letter-spacing: -0.01em;
   }
 
   @media (max-width: 768px) {
-    .footer-container {
-      flex-direction: column;
+    .footer-line {
+      font-size: 18px;
+    }
+    .footer-grid {
+      grid-template-columns: repeat(2, 1fr);
       gap: var(--spacing-16);
-      text-align: center;
     }
   }
 </style>

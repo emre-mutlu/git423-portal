@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { ADMIN_COOKIE } from '../../../lib/auth';
+import { ADMIN_COOKIE } from '@/lib/auth';
 
 export const POST: APIRoute = () => {
   return new Response(null, {

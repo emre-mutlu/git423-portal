@@ -1,6 +1,6 @@
 ---
-import AdminLayout from '../../../layouts/AdminLayout.astro';
-import { supabaseAdmin } from '../../../lib/supabase';
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import { supabaseAdmin } from '@/lib/supabase';
 
 const { id } = Astro.params;
 if (!id) return Astro.redirect('/admin/students');
@@ -38,47 +38,46 @@ const avg = gradedSubs.length
     <a href="/admin/students" class="back-link">← Öğrenciler</a>
   </div>
 
-  <div class="profile-grid">
-    <!-- Öğrenci Bilgisi -->
-    <div class="card card-elevated profile-card">
-      <div class="profile-info">
-        <div>
-          <h1 class="name">{student.name_masked}</h1>
-          <span class="badge badge-default">{student.branch}</span>
-        </div>
-        <span class="student-no font-mono">{student.student_number}</span>
-      </div>
-      <div class="stats-row">
-        <div class="stat">
-          <span class="stat-label">Teslim</span>
-          <span class="stat-val font-mono">{submissions?.length ?? 0}</span>
-        </div>
-        <div class="stat">
-          <span class="stat-label">Notlanan</span>
-          <span class="stat-val font-mono">{gradedSubs.length}</span>
-        </div>
-        <div class="stat highlight">
-          <span class="stat-label">Ortalama</span>
-          <span class="stat-val font-mono">{avg ?? '—'}</span>
-        </div>
-        <div class="stat">
-          <span class="stat-label">PIN</span>
-          <span class={`badge ${student.pin_hash ? 'badge-success' : 'badge-neutral'}`}>
-            {student.pin_hash ? 'Var' : 'Yok'}
-          </span>
-        </div>
-      </div>
-      {student.pin_hash && (
-        <button id="resetPinBtn" class="btn btn-subtle btn-sm" data-id={student.id}>
-          PIN Sıfırla
-        </button>
-      )}
+  <div class="page-header student-page-header">
+    <div>
+      <p class="kicker">Öğrenci · <span class="font-mono">{student.student_number}</span></p>
+      <h1 class="page-title">{student.name_masked}</h1>
+      <p class="page-subtitle">
+        <span>{student.branch}</span>
+        <span class="ml-sep"></span>
+        <span class={`badge ${student.pin_hash ? 'badge-success' : 'badge-neutral'}`}>
+          PIN {student.pin_hash ? 'belirlendi' : 'belirlenmedi'}
+        </span>
+      </p>
+    </div>
+    {student.pin_hash && (
+      <button id="resetPinBtn" class="btn btn-secondary" data-id={student.id}>
+        PIN Sıfırla
+      </button>
+    )}
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card card">
+      <span class="stat-label">Teslim</span>
+      <span class="stat-value">{submissions?.length ?? 0}</span>
+    </div>
+    <div class="stat-card card">
+      <span class="stat-label">Notlanan</span>
+      <span class="stat-value">{gradedSubs.length}</span>
+    </div>
+    <div class="stat-card card highlight">
+      <span class="stat-label">Ortalama</span>
+      <span class="stat-value">{avg ?? '—'}</span>
     </div>
   </div>
 
   <!-- Teslim geçmişi -->
-  <h2 class="section-title">Teslim Geçmişi</h2>
-  <div class="card card-elevated table-card">
+  <div class="section-header">
+    <h2 class="section-label" data-num="01">Teslim Geçmişi</h2>
+    <span class="section-meta">{submissions?.length ?? 0} kayıt</span>
+  </div>
+  <div class="card table-card">
     {!submissions?.length ? (
       <p class="empty">Henüz teslim yok.</p>
     ) : (
@@ -141,136 +140,59 @@ const avg = gradedSubs.length
 </script>
 
 <style>
-  .top-nav { margin-bottom: var(--spacing-24); }
+  .top-nav { margin-bottom: var(--spacing-16); }
 
   .back-link {
+    font-family: var(--font-mono);
     font-size: 12px;
     color: var(--color-storm-cloud);
     text-decoration: none;
   }
   .back-link:hover { color: var(--color-porcelain); }
 
-  .profile-grid {
-    margin-bottom: var(--spacing-24);
-  }
-
-  .profile-card {
-    padding: var(--spacing-24);
-  }
-
-  .profile-info {
+  .student-page-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: var(--spacing-20);
+    align-items: flex-end;
+    gap: var(--spacing-16);
+    flex-wrap: wrap;
   }
 
-  .name {
-    font-size: 20px;
-    margin-bottom: var(--spacing-8);
+  .page-subtitle .sep {
+    color: var(--color-charcoal-grey);
+    margin: 0 var(--spacing-8);
   }
 
-  .student-no {
-    font-size: 20px;
-    color: var(--color-storm-cloud);
+  .page-subtitle .badge {
+    margin-left: var(--spacing-4);
   }
 
-  .stats-row {
-    display: flex;
-    gap: var(--spacing-24);
-    margin-bottom: var(--spacing-16);
-  }
-
-  .stat {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  .stat-label {
-    font-size: 11px;
-    color: var(--color-storm-cloud);
-  }
-
-  .stat-val {
-    font-size: 22px;
-    color: var(--color-porcelain);
-  }
-
-  .highlight .stat-val {
-    color: var(--color-neon-lime);
-  }
-
-  .btn-sm { font-size: 13px; padding: 6px 12px; }
-
-  .section-title {
-    font-size: 14px;
-    color: var(--color-storm-cloud);
-    font-weight: 400;
-    margin-bottom: var(--spacing-12);
-  }
-
-  .table-card {
-    padding: 0;
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    margin-bottom: var(--spacing-48);
+    border: 1px solid var(--color-charcoal-grey);
+    border-radius: var(--radius-cards);
     overflow: hidden;
   }
 
-  .data-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
+  .stats-grid .stat-card {
+    border: none;
+    border-right: 1px solid var(--color-charcoal-grey);
+    border-radius: 0;
+    background: var(--surface-card);
+  }
+
+  .stats-grid .stat-card:last-child {
+    border-right: none;
+  }
+
+  .section-meta {
+    font-size: 11px;
+    color: var(--color-fog-grey);
   }
 
   .data-table th,
-  .data-table td {
-    padding: var(--spacing-12) var(--spacing-16);
-    text-align: left;
-    border-bottom: 1px solid var(--color-charcoal-grey);
-    white-space: nowrap;
-  }
-
-  .data-table tr:last-child td { border-bottom: none; }
-
-  .data-table th {
-    color: var(--color-fog-grey);
-    font-weight: 400;
-    font-size: 11px;
-    background: rgba(255,255,255,0.02);
-  }
-
-  .badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 2px 6px;
-    border-radius: 2px;
-    font-size: 11px;
-    font-weight: 500;
-  }
-
-  .badge-default { background: var(--color-gunmetal); color: var(--color-storm-cloud); border: 1px solid var(--color-charcoal-grey); }
-  .badge-success { background: rgba(0,141,44,0.15); color: #27a644; border: 1px solid rgba(0,141,44,0.3); }
-  .badge-neutral { background: var(--color-charcoal-grey); color: var(--color-fog-grey); }
-
-  .late-tag {
-    display: inline-block;
-    margin-left: 6px;
-    font-size: 10px;
-    color: var(--color-warning-red);
-    border: 1px solid rgba(235,87,87,0.4);
-    padding: 1px 4px;
-    border-radius: 2px;
-    font-family: var(--font-berkeley-mono);
-  }
-
-  .text-muted { color: var(--color-storm-cloud); }
-  .link-action { font-size: 12px; color: var(--color-aether-blue); text-decoration: none; }
-  .link-action:hover { color: var(--color-porcelain); }
-
-  .empty {
-    padding: var(--spacing-32);
-    text-align: center;
-    color: var(--color-storm-cloud);
-    font-size: 13px;
-    margin: 0;
-  }
+  .data-table td { white-space: nowrap; }
 </style>

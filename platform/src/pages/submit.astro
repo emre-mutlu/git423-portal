@@ -1,6 +1,6 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import { supabaseAdmin } from '../lib/supabase';
+import Layout from '@/layouts/Layout.astro';
+import { supabaseAdmin } from '@/lib/supabase';
 
 const student = Astro.locals.student;
 
@@ -15,18 +15,19 @@ const hasAssignments = assignments && assignments.length > 0;
 
 <Layout title="Ödev Yükle">
 	<div class="submit-container">
-		<header class="submit-header">
-			<h1>Ödev Yükleme Portalı</h1>
-			<p>Projenizi ZIP olarak sıkıştırın ve sisteme yükleyin.</p>
-		</header>
+		<div class="page-header">
+			<p class="kicker">Yeni Teslim</p>
+			<h1 class="page-title">Projenizi<br/><span class="title-em">yükleyin.</span></h1>
+			<p class="page-subtitle">Aktif ödevlerden birini seçin, projenizi ZIP olarak sıkıştırıp gönderin. Önceki gönderiminiz varsa üzerine yazılır.</p>
+		</div>
 
-		<div class="card card-elevated form-card">
+		<div class="card form-card">
 			{!hasAssignments ? (
-				<p class="no-assign">Şu anda aktif ödev bulunmuyor.</p>
+				<p class="empty">Şu anda aktif ödev bulunmuyor.</p>
 			) : (
 				<form id="uploadForm" class="upload-form">
 					<div class="input-group">
-						<label for="assignmentId">Ödev</label>
+						<label for="assignmentId">Ödev Seçimi</label>
 						<select id="assignmentId" name="assignmentId" class="input-linear" required>
 							<option value="" disabled selected>Seçiniz</option>
 							{assignments.map(a => {
@@ -39,10 +40,13 @@ const hasAssignments = assignments && assignments.length > 0;
 					</div>
 
 					<div class="input-group">
-						<label>Proje ZIP Dosyası</label>
+						<label>Proje Dosyası</label>
 						<div class="file-drop-area" id="dropArea">
-							<span class="drop-icon">📦</span>
-							<p class="drop-msg">ZIP dosyasını buraya sürükleyin veya <b>tıklayarak seçin</b></p>
+							<svg class="drop-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+								<path d="M21 8v13H3V8M1 3h22v5H1zM10 12h4"/>
+							</svg>
+							<p class="drop-msg">ZIP dosyasını sürükleyin veya <b>tıklayarak seçin</b></p>
+							<p class="drop-hint font-mono">accepts: .zip · max 50mb</p>
 							<input type="file" id="fileInput" name="file" accept=".zip" class="hidden-file-input" required />
 						</div>
 						<div id="fileList" class="file-list"></div>
@@ -155,25 +159,19 @@ const hasAssignments = assignments && assignments.length > 0;
 
 <style>
 	.submit-container {
-		max-width: 600px;
+		max-width: 640px;
 		margin: 0 auto;
-		padding-top: var(--spacing-48);
+		padding-top: var(--spacing-32);
 	}
 
-	.submit-header {
-		margin-bottom: var(--spacing-32);
+	.title-em {
+		font-weight: 300;
+		font-style: italic;
+		color: var(--color-neon-lime);
 	}
 
 	.form-card {
 		padding: var(--spacing-32);
-	}
-
-	.no-assign {
-		color: var(--color-storm-cloud);
-		font-size: var(--text-body);
-		text-align: center;
-		padding: var(--spacing-24) 0;
-		margin: 0;
 	}
 
 	.input-group {
@@ -182,23 +180,12 @@ const hasAssignments = assignments && assignments.length > 0;
 
 	.input-group label {
 		display: block;
-		margin-bottom: var(--spacing-8);
-		font-size: var(--text-caption);
+		margin-bottom: var(--spacing-12);
+		font-family: var(--font-mono);
+		font-size: 10px;
 		color: var(--color-storm-cloud);
-	}
-
-	.input-linear {
-		width: 100%;
-		background: transparent;
-		color: var(--color-porcelain);
-		border: 1px solid var(--color-charcoal-grey);
-		border-radius: var(--radius-inputs);
-		padding: 12px 14px;
-		font-family: var(--font-inter-variable);
-		font-size: var(--text-body);
-		outline: none;
-		transition: border-color var(--transition-fast);
-		box-sizing: border-box;
+		text-transform: uppercase;
+		letter-spacing: 0.12em;
 	}
 
 	.input-linear:focus {
@@ -222,12 +209,16 @@ const hasAssignments = assignments && assignments.length > 0;
 	.file-drop-area {
 		border: 1px dashed var(--color-charcoal-grey);
 		border-radius: var(--radius-inputs);
-		padding: var(--spacing-32) var(--spacing-16);
+		padding: var(--spacing-40) var(--spacing-16);
 		text-align: center;
 		cursor: pointer;
 		background: rgba(255,255,255,0.01);
 		transition: all var(--transition-fast);
 		margin-bottom: var(--spacing-12);
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--spacing-8);
 	}
 
 	.file-drop-area:hover, .file-drop-area.dragover {
@@ -236,9 +227,13 @@ const hasAssignments = assignments && assignments.length > 0;
 	}
 
 	.drop-icon {
-		font-size: 32px;
-		margin-bottom: var(--spacing-8);
-		display: inline-block;
+		color: var(--color-storm-cloud);
+		transition: color var(--transition-fast);
+	}
+
+	.file-drop-area:hover .drop-icon,
+	.file-drop-area.dragover .drop-icon {
+		color: var(--color-neon-lime);
 	}
 
 	.drop-msg {
@@ -249,6 +244,14 @@ const hasAssignments = assignments && assignments.length > 0;
 
 	.drop-msg b {
 		color: var(--color-porcelain);
+		font-weight: var(--font-weight-w590);
+	}
+
+	.drop-hint {
+		font-size: 10px;
+		color: var(--color-fog-grey);
+		letter-spacing: 0.05em;
+		margin: 0;
 	}
 
 	.hidden-file-input {

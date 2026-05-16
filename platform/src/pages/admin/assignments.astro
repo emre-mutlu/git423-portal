@@ -1,6 +1,6 @@
 ---
-import AdminLayout from '../../layouts/AdminLayout.astro';
-import { supabaseAdmin } from '../../lib/supabase';
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import { supabaseAdmin } from '@/lib/supabase';
 
 const { data: assignments } = await supabaseAdmin
   .from('assignments')
@@ -10,12 +10,16 @@ const { data: assignments } = await supabaseAdmin
 
 <AdminLayout title="Ödevler">
   <div class="page-header">
-    <h1>Ödevler</h1>
+    <p class="kicker">Admin · Ödev Yönetimi</p>
+    <h1 class="page-title">Ödevler</h1>
+    <p class="page-subtitle">Hafta bazında ödev oluşturun ve aktif olanları yönetin.</p>
   </div>
 
   <!-- Yeni ödev formu -->
-  <div class="card card-elevated form-card">
-    <h2>Yeni Ödev Ekle</h2>
+  <div class="section-header">
+    <h2 class="section-label" data-num="01">Yeni Ödev Ekle</h2>
+  </div>
+  <div class="card form-card">
     <div class="form-row">
       <div class="input-group">
         <label for="weekNumber">Hafta #</label>
@@ -34,8 +38,13 @@ const { data: assignments } = await supabaseAdmin
     <p id="addStatus" class="status-msg hidden"></p>
   </div>
 
+  <div class="section-header" style="margin-top: var(--spacing-48);">
+    <h2 class="section-label" data-num="02">Tüm Ödevler</h2>
+    <span class="section-meta">{assignments?.length ?? 0} kayıt</span>
+  </div>
+
   <!-- Ödev listesi -->
-  <div class="card card-elevated table-card">
+  <div class="card table-card">
     {!assignments?.length ? (
       <p class="empty">Henüz ödev eklenmemiş.</p>
     ) : (
@@ -165,24 +174,14 @@ const { data: assignments } = await supabaseAdmin
 </script>
 
 <style>
-  .page-header {
-    margin-bottom: var(--spacing-24);
-  }
-
-  .page-header h1 {
-    font-size: 24px;
-  }
-
   .form-card {
     padding: var(--spacing-24);
-    margin-bottom: var(--spacing-24);
+    margin-bottom: var(--spacing-12);
   }
 
-  .form-card h2 {
-    font-size: 14px;
-    color: var(--color-storm-cloud);
-    margin-bottom: var(--spacing-16);
-    font-weight: 400;
+  .section-meta {
+    font-size: 11px;
+    color: var(--color-fog-grey);
   }
 
   .form-row {
@@ -192,120 +191,10 @@ const { data: assignments } = await supabaseAdmin
     align-items: flex-end;
   }
 
-  .input-group {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-  }
-
+  .input-group { flex: 1; }
   .flex-2 { flex: 2; }
-
-  .input-group label {
-    font-size: 11px;
-    color: var(--color-storm-cloud);
-    margin-bottom: var(--spacing-8);
-  }
-
-  .input-linear {
-    background: transparent;
-    color: var(--color-porcelain);
-    border: 1px solid var(--color-charcoal-grey);
-    border-radius: var(--radius-inputs);
-    padding: 10px 12px;
-    font-family: var(--font-inter-variable);
-    font-size: 13px;
-    outline: none;
-    width: 100%;
-    box-sizing: border-box;
-    transition: border-color 0.12s;
-  }
-
-  .input-linear:focus {
-    border-color: var(--color-light-steel);
-  }
-
-  input[type="datetime-local"]::-webkit-calendar-picker-indicator {
-    filter: invert(0.6);
-  }
-
-  .table-card {
-    padding: 0;
-    overflow: hidden;
-  }
-
-  .data-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
-  }
-
-  .data-table th,
-  .data-table td {
-    padding: var(--spacing-12) var(--spacing-16);
-    text-align: left;
-    border-bottom: 1px solid var(--color-charcoal-grey);
-  }
-
-  .data-table tr:last-child td {
-    border-bottom: none;
-  }
-
-  .data-table th {
-    color: var(--color-fog-grey);
-    font-weight: 400;
-    font-size: 11px;
-    background: rgba(255, 255, 255, 0.02);
-  }
-
-  .badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 2px 6px;
-    border-radius: 2px;
-    font-size: 11px;
-    font-weight: 500;
-  }
-
-  .badge-success { background: rgba(0, 141, 44, 0.15); color: #27a644; border: 1px solid rgba(0, 141, 44, 0.3); }
-  .badge-neutral { background: var(--color-charcoal-grey); color: var(--color-fog-grey); }
-
-  .text-muted { color: var(--color-storm-cloud); }
-  .text-warning { color: var(--color-warning-red); }
 
   .actions-cell { white-space: nowrap; }
 
-  .action-btn {
-    background: none;
-    border: 1px solid var(--color-charcoal-grey);
-    color: var(--color-storm-cloud);
-    padding: 4px 10px;
-    border-radius: var(--radius-inputs);
-    font-size: 12px;
-    cursor: pointer;
-    transition: all 0.12s;
-  }
-
-  .action-btn:hover {
-    border-color: var(--color-light-steel);
-    color: var(--color-porcelain);
-  }
-
-  .empty {
-    padding: var(--spacing-32);
-    text-align: center;
-    color: var(--color-storm-cloud);
-    font-size: 13px;
-    margin: 0;
-  }
-
-  .status-msg {
-    margin-top: var(--spacing-12);
-    font-size: 13px;
-    padding: var(--spacing-8) var(--spacing-12);
-    border-radius: var(--radius-sm, 4px);
-  }
-
-  .status-msg.success { color: #27a644; background: rgba(0, 141, 44, 0.1); }
-  .status-msg.error { color: #ff8c8c; background: rgba(235, 87, 87, 0.1); }
-  .hidden { display: none !important; }
+  .status-msg { margin-top: var(--spacing-12); }
 </style>

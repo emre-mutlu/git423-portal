@@ -1,6 +1,6 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import { supabaseAdmin } from '../lib/supabase';
+import Layout from '@/layouts/Layout.astro';
+import { supabaseAdmin } from '@/lib/supabase';
 
 const student = Astro.locals.student!;
 
@@ -92,48 +92,56 @@ function getStatusClass(status: string, isLate: boolean | null = null): string {
 
 <Layout title="Not Paneli">
   <div class="grades-container">
-    <div class="card card-elevated">
-      <div class="profile-header">
-        <div class="profile-info">
-          <h2>{student.name_masked}</h2>
-          <span class="badge badge-default">{student.branch}</span>
-        </div>
-        <div class="header-actions">
-          <button id="changePinBtn" class="btn btn-subtle">PIN Değiştir</button>
-          <form action="/api/auth/logout" method="POST">
-            <button type="submit" class="btn btn-subtle">Çıkış Yap</button>
-          </form>
-        </div>
+    <div class="page-header grades-page-header">
+      <div class="page-header-text">
+        <p class="kicker">Not Paneli · {student.branch}</p>
+        <h1 class="page-title">{student.name_masked}</h1>
+        <p class="page-subtitle">
+          <span class="font-mono num-badge">{student.student_number}</span>
+          <span class="ml-sep">Öğrencisinin teslim ve değerlendirme özeti.</span>
+        </p>
       </div>
-
-      <div class="stats-grid">
-        <div class="stat-box nested-card">
-          <span class="stat-label">Tamamlanan</span>
-          <span class="stat-value font-mono">{submittedCount}/{totalAssignments}</span>
-        </div>
-        <div class="stat-box nested-card highlight">
-          <span class="stat-label">Vize Projeksiyonu</span>
-          <span class="stat-value font-mono">{midtermAvg ?? '—'}</span>
-        </div>
-        <div class="stat-box nested-card">
-          <span class="stat-label">Öğrenci No</span>
-          <span class="stat-value font-mono" style="font-size:14px">{student.student_number}</span>
-        </div>
+      <div class="header-actions">
+        <button id="changePinBtn" class="btn btn-subtle">PIN Değiştir</button>
+        <form action="/api/auth/logout" method="POST">
+          <button type="submit" class="btn btn-subtle">Çıkış</button>
+        </form>
       </div>
+    </div>
 
-      <div class="table-container nested-card">
-        {rows.length === 0 ? (
-          <p class="empty-state">Henüz aktif ödev bulunmuyor.</p>
-        ) : (
-          <table class="grading-table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Görev</th>
-                <th>Durum</th>
-                <th class="text-right">Puan</th>
-              </tr>
-            </thead>
+    <div class="stats-grid">
+      <div class="stat-card card">
+        <span class="stat-label">Tamamlanan</span>
+        <span class="stat-value"><span class="num-large">{submittedCount}</span><span class="num-divider">/</span><span class="num-of">{totalAssignments}</span></span>
+      </div>
+      <div class="stat-card card highlight">
+        <span class="stat-label">Vize Projeksiyonu</span>
+        <span class="stat-value">{midtermAvg ?? '—'}</span>
+      </div>
+      <div class="stat-card card">
+        <span class="stat-label">Geç Teslim</span>
+        <span class="stat-value">{(submissions ?? []).filter(s => s.is_late).length}</span>
+      </div>
+    </div>
+
+    <div class="section-header">
+      <h2 class="section-label" data-num="02">Ödev Teslimleri</h2>
+      <span class="section-meta">{rows.length} kayıt</span>
+    </div>
+
+    <div class="card table-card">
+      {rows.length === 0 ? (
+        <p class="empty">Henüz aktif ödev bulunmuyor.</p>
+      ) : (
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Görev</th>
+              <th>Durum</th>
+              <th class="text-right">Puan</th>
+            </tr>
+          </thead>
             <tbody>
               {rows.map(row => {
                 const isLate = row.status === 'graded'
@@ -157,7 +165,6 @@ function getStatusClass(status: string, isLate: boolean | null = null): string {
           </table>
         )}
       </div>
-    </div>
   </div>
 
   <!-- PIN Değiştir Modal -->
@@ -244,137 +251,90 @@ function getStatusClass(status: string, isLate: boolean | null = null): string {
 
 <style>
   .grades-container {
-    max-width: 720px;
+    max-width: 960px;
     margin: 0 auto;
-    padding-top: var(--spacing-48);
+    padding-top: var(--spacing-32);
   }
 
-  .profile-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: var(--spacing-24);
-    padding: var(--spacing-24) var(--spacing-24) 0;
+  .grades-page-header {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: end;
+    gap: var(--spacing-32);
+    flex-wrap: wrap;
   }
 
-  .profile-info h2 {
-    margin-bottom: var(--spacing-8);
+  .page-header-text {
+    max-width: 60ch;
   }
 
-  .badge {
-    padding: 2px 6px;
-    border-radius: var(--radius-tags);
-    font-size: 11px;
-    font-weight: var(--font-weight-w510);
-    display: inline-flex;
-    align-items: center;
+  .num-badge {
+    color: var(--color-neon-lime);
   }
 
-  .badge-default {
-    background: var(--color-gunmetal);
+  .ml-sep {
     color: var(--color-storm-cloud);
-    border: 1px solid var(--color-charcoal-grey);
+    margin-left: var(--spacing-12);
   }
 
-  .badge-success { background: rgba(0, 141, 44, 0.15); color: var(--color-emerald); border: 1px solid rgba(0, 141, 44, 0.3); }
-  .badge-warning { background: rgba(235, 87, 87, 0.1); color: var(--color-warning-red); border: 1px solid rgba(235, 87, 87, 0.2); }
-  .badge-danger { background: rgba(235, 87, 87, 0.2); color: #ff8c8c; border: 1px solid rgba(235, 87, 87, 0.4); }
-  .badge-neutral { background: var(--color-charcoal-grey); color: var(--color-fog-grey); border: none; }
-
-  .nested-card {
-    background: var(--surface-canvas);
-    border-radius: var(--radius-cards);
-    padding: var(--spacing-16);
+  .header-actions {
+    display: flex;
+    gap: var(--spacing-4);
+    align-items: center;
+    flex-shrink: 0;
   }
 
   .stats-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: var(--spacing-12);
-    margin: 0 var(--spacing-24) var(--spacing-24);
-  }
-
-  .stat-box { text-align: left; }
-
-  .stat-label {
-    display: block;
-    font-size: var(--text-caption);
-    color: var(--color-storm-cloud);
-    margin-bottom: var(--spacing-8);
-  }
-
-  .stat-value {
-    font-size: 20px;
-    color: var(--color-porcelain);
-  }
-
-  .highlight {
-    box-shadow: inset 2px 0 0 var(--color-neon-lime);
-  }
-
-  .table-container {
-    margin: 0 var(--spacing-24) var(--spacing-24);
-    padding: 0;
-    overflow: hidden;
+    gap: 0;
+    margin-bottom: var(--spacing-48);
     border: 1px solid var(--color-charcoal-grey);
+    border-radius: var(--radius-cards);
+    overflow: hidden;
   }
 
-  .empty-state {
-    padding: var(--spacing-32);
-    text-align: center;
-    color: var(--color-storm-cloud);
-    font-size: var(--text-body);
-    margin: 0;
+  .stats-grid .stat-card {
+    border: none;
+    border-right: 1px solid var(--color-charcoal-grey);
+    border-radius: 0;
+    background: var(--surface-card);
   }
 
-  .grading-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
+  .stats-grid .stat-card:last-child {
+    border-right: none;
   }
 
-  .grading-table th,
-  .grading-table td {
-    padding: var(--spacing-12) var(--spacing-16);
-    text-align: left;
-    border-bottom: 1px solid var(--color-charcoal-grey);
+  .num-large {
+    font-weight: 500;
   }
 
-  .grading-table th {
+  .num-divider {
     color: var(--color-fog-grey);
-    font-weight: var(--font-weight-regular);
-    font-size: var(--text-caption);
-    background: rgba(255, 255, 255, 0.02);
+    margin: 0 4px;
+    font-weight: 300;
   }
 
-  .grading-table tr:last-child td {
-    border-bottom: none;
+  .num-of {
+    color: var(--color-storm-cloud);
+    font-weight: 400;
+    font-size: 0.7em;
   }
 
-  .text-right { text-align: right !important; }
-  .text-muted { color: var(--color-fog-grey); }
-  .text-porcelain { color: var(--color-porcelain); }
-
-  .header-actions {
-    display: flex;
-    gap: var(--spacing-8);
-    align-items: center;
-  }
-
-  .modal-backdrop {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.6);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 200;
-  }
-
-  .modal-card {
-    width: 100%;
-    max-width: 340px;
-    padding: var(--spacing-32);
+  @media (max-width: 720px) {
+    .grades-page-header {
+      grid-template-columns: 1fr;
+    }
+    .stats-grid {
+      grid-template-columns: 1fr;
+    }
+    .stats-grid .stat-card {
+      border-right: none;
+      border-bottom: 1px solid var(--color-charcoal-grey);
+    }
+    .stats-grid .stat-card:last-child {
+      border-bottom: none;
+    }
   }
 
   .modal-card h3 {
@@ -382,52 +342,7 @@ function getStatusClass(status: string, isLate: boolean | null = null): string {
     margin-bottom: var(--spacing-24);
   }
 
-  .input-group {
-    margin-bottom: var(--spacing-16);
-  }
-
-  .input-group label {
-    display: block;
-    font-size: var(--text-caption);
-    color: var(--color-storm-cloud);
-    margin-bottom: var(--spacing-8);
-  }
-
-  .input-linear {
-    width: 100%;
-    box-sizing: border-box;
-    background: transparent;
-    color: var(--color-porcelain);
-    border: 1px solid var(--color-charcoal-grey);
-    border-radius: var(--radius-inputs);
-    padding: 10px 12px;
-    font-family: var(--font-inter-variable);
-    font-size: var(--text-body);
-    outline: none;
-    transition: border-color 0.12s;
-  }
-
-  .input-linear:focus { border-color: var(--color-light-steel); }
-
-  .pin-input {
-    letter-spacing: 0.3em;
-    font-size: 18px;
-    text-align: center;
-    font-family: var(--font-berkeley-mono);
-  }
-
-  .error-msg {
-    color: var(--color-warning-red);
-    font-size: var(--text-caption);
-    margin-bottom: var(--spacing-12);
-  }
-
-  .modal-actions {
-    display: flex;
-    gap: var(--spacing-8);
-    justify-content: flex-end;
-    margin-top: var(--spacing-8);
-  }
+  .error-msg { margin-bottom: var(--spacing-12); }
 
   @media (max-width: 640px) {
     .stats-grid { grid-template-columns: 1fr; }

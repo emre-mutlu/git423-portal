@@ -1,12 +1,6 @@
 import type { APIRoute } from 'astro';
-import { validateSession, setPin } from '../../../lib/auth';
-import { supabaseAdmin } from '../../../lib/supabase';
-
-async function hashPin(pin: string): Promise<string> {
-  const data = new TextEncoder().encode(pin + 'git423salt');
-  const buffer = await crypto.subtle.digest('SHA-256', data);
-  return Array.from(new Uint8Array(buffer)).map(b => b.toString(16).padStart(2, '0')).join('');
-}
+import { validateSession, setPin, hashPin } from '@/lib/auth';
+import { supabaseAdmin } from '@/lib/supabase';
 
 export const POST: APIRoute = async ({ request }) => {
   const cookies = request.headers.get('cookie');

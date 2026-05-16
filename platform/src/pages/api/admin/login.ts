@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { createAdminCookie } from '../../../lib/auth';
+import { createAdminCookie } from '@/lib/auth';
 
 export const POST: APIRoute = async ({ request }) => {
   const { password } = await request.json();

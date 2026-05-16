@@ -13,15 +13,20 @@ if (cookies.includes('git423_admin=authorized')) {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>Admin Giriş | GİT 423</title>
+    <title>Admin Giriş | GİT423</title>
   </head>
   <body>
     <div class="login-wrap">
-      <div class="login-card card card-elevated">
-        <div class="login-header">
-          <span class="logo-mono font-mono">GİT 423</span>
-          <span class="admin-badge">Admin</span>
-        </div>
+      <div class="login-brand">
+        <span class="logo-mark">◆</span>
+        <span class="font-mono brand-line">GİT423</span>
+        <span class="admin-badge">Admin</span>
+      </div>
+      <p class="kicker">Yönetici Girişi</p>
+      <h1 class="page-title">Sisteme<br/><span class="title-em">erişim.</span></h1>
+      <p class="page-subtitle">Yönetim panelini açmak için admin şifresini girin.</p>
+
+      <div class="login-card card">
         <div class="input-group">
           <label for="password">Şifre</label>
           <input
@@ -30,9 +35,13 @@ if (cookies.includes('git423_admin=authorized')) {
             class="input-linear"
             placeholder="••••••••"
             autocomplete="current-password"
+            autofocus
           />
         </div>
-        <button id="loginBtn" class="btn btn-primary w-full">Giriş Yap</button>
+        <button id="loginBtn" class="btn btn-primary w-full">
+          <span id="loginBtnText">Giriş Yap</span>
+          <span class="btn-arrow-icon">→</span>
+        </button>
         <p id="errorMsg" class="error-msg hidden">Hatalı şifre.</p>
       </div>
     </div>
@@ -40,10 +49,15 @@ if (cookies.includes('git423_admin=authorized')) {
 </html>
 
 <script>
-  document.getElementById('loginBtn')!.addEventListener('click', async () => {
+  const loginBtn = document.getElementById('loginBtn') as HTMLButtonElement;
+  const loginBtnText = document.getElementById('loginBtnText')!;
+
+  loginBtn.addEventListener('click', async () => {
     const password = (document.getElementById('password') as HTMLInputElement).value;
     const errorMsg = document.getElementById('errorMsg')!;
     errorMsg.classList.add('hidden');
+    loginBtn.disabled = true;
+    loginBtnText.textContent = 'Doğrulanıyor...';
 
     const res = await fetch('/api/admin/login', {
       method: 'POST',
@@ -55,6 +69,8 @@ if (cookies.includes('git423_admin=authorized')) {
       window.location.href = '/admin';
     } else {
       errorMsg.classList.remove('hidden');
+      loginBtn.disabled = false;
+      loginBtnText.textContent = 'Giriş Yap';
     }
   });
 
@@ -69,29 +85,31 @@ if (cookies.includes('git423_admin=authorized')) {
     align-items: center;
     justify-content: center;
     min-height: 100vh;
+    padding: var(--spacing-24);
   }
 
   .login-wrap {
     width: 100%;
-    max-width: 360px;
-    padding: var(--spacing-16);
+    max-width: 440px;
   }
 
-  .login-card {
-    padding: var(--spacing-32);
-  }
-
-  .login-header {
+  .login-brand {
     display: flex;
     align-items: center;
     gap: var(--spacing-8);
     margin-bottom: var(--spacing-32);
   }
 
-  .logo-mono {
-    font-size: 16px;
+  .logo-mark {
+    color: var(--color-neon-lime);
+    font-size: 12px;
+  }
+
+  .brand-line {
+    font-size: 12px;
+    font-weight: 600;
     color: var(--color-porcelain);
-    letter-spacing: 0.02em;
+    letter-spacing: 0.08em;
   }
 
   .admin-badge {
@@ -101,19 +119,39 @@ if (cookies.includes('git423_admin=authorized')) {
     padding: 2px 6px;
     border-radius: 2px;
     font-weight: 700;
-    letter-spacing: 0.05em;
-    font-family: var(--font-berkeley-mono);
+    letter-spacing: 0.08em;
+    font-family: var(--font-mono);
+    margin-left: var(--spacing-4);
+  }
+
+  .page-title {
+    font-size: clamp(40px, 6vw, 56px);
+    margin-bottom: var(--spacing-20);
+  }
+
+  .title-em {
+    font-weight: 300;
+    font-style: italic;
+    color: var(--color-neon-lime);
+  }
+
+  .login-card {
+    padding: var(--spacing-24);
+    margin-top: var(--spacing-32);
   }
 
   .input-group {
-    margin-bottom: var(--spacing-16);
+    margin-bottom: var(--spacing-20);
   }
 
   .input-group label {
     display: block;
-    font-size: var(--text-caption);
+    font-family: var(--font-mono);
+    font-size: 10px;
     color: var(--color-storm-cloud);
-    margin-bottom: var(--spacing-8);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: var(--spacing-12);
   }
 
   .input-linear {
@@ -124,10 +162,10 @@ if (cookies.includes('git423_admin=authorized')) {
     border: 1px solid var(--color-charcoal-grey);
     border-radius: var(--radius-inputs);
     padding: 12px 14px;
-    font-family: var(--font-inter-variable);
-    font-size: var(--text-body);
+    font-family: var(--font-sans);
+    font-size: 14px;
     outline: none;
-    transition: border-color 0.12s;
+    transition: border-color 0.15s;
   }
 
   .input-linear:focus {
@@ -136,11 +174,19 @@ if (cookies.includes('git423_admin=authorized')) {
 
   .w-full { width: 100%; }
 
+  .btn-arrow-icon {
+    font-family: var(--font-mono);
+    transition: transform 0.2s ease;
+  }
+
+  .btn-primary:hover .btn-arrow-icon {
+    transform: translateX(4px);
+  }
+
   .error-msg {
     color: var(--color-warning-red);
-    font-size: var(--text-caption);
-    margin-top: var(--spacing-8);
-    text-align: center;
+    font-size: 13px;
+    margin-top: var(--spacing-12);
   }
 
   .hidden { display: none !important; }

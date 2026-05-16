@@ -4,7 +4,7 @@ const SESSION_COOKIE = 'git423_session';
 const ADMIN_COOKIE = 'git423_admin';
 
 // PIN hashleme — Web Crypto API (sunucu tarafı, native)
-async function hashPin(pin: string): Promise<string> {
+export async function hashPin(pin: string): Promise<string> {
   const data = new TextEncoder().encode(pin + 'git423salt');
   const buffer = await crypto.subtle.digest('SHA-256', data);
   return Array.from(new Uint8Array(buffer)).map(b => b.toString(16).padStart(2, '0')).join('');

@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
-import { supabaseAdmin } from '../../../lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase';
+import { SUBMISSION_STATUS, GRADE_ON_TIME, GRADE_LATE } from '@/lib/constants';
 
 export const POST: APIRoute = async ({ request }) => {
   const body = await request.json();
@@ -13,7 +14,7 @@ export const POST: APIRoute = async ({ request }) => {
       .from('submissions')
       .select('id, is_late')
       .eq('assignment_id', id)
-      .eq('status', 'submitted');
+      .eq('status', SUBMISSION_STATUS.SUBMITTED);
 
     if (!submissions?.length) {
       return new Response(JSON.stringify({ ok: true, count: 0 }), { status: 200 });
@@ -23,8 +24,8 @@ export const POST: APIRoute = async ({ request }) => {
     await Promise.all(
       submissions.map(s =>
         supabaseAdmin.from('submissions').update({
-          status: 'graded',
-          score: s.is_late ? 60 : 100,
+          status: SUBMISSION_STATUS.GRADED,
+          score: s.is_late ? GRADE_LATE : GRADE_ON_TIME,
           graded_at: now,
         }).eq('id', s.id)
       )
