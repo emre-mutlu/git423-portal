@@ -28,7 +28,7 @@ jobs:
         run: npm run build
 
       - name: Deploy to Cloudflare Workers
-        working-directory: platform/dist/server
+        working-directory: platform
         run: npx wrangler deploy --name git423-portal
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
