@@ -1,4 +1,4 @@
-name: Deploy to Cloudflare Pages
+name: Deploy to Cloudflare Workers
 
 on:
   push:
@@ -25,13 +25,11 @@ jobs:
         env:
           PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
           PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
         run: npm run build
 
-      - name: Deploy to Cloudflare Pages
-        working-directory: platform
-        run: npx wrangler pages deploy dist --project-name=git423-portal --branch=master
+      - name: Deploy to Cloudflare Workers
+        working-directory: platform/dist/server
+        run: npx wrangler deploy --name git423-portal
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
